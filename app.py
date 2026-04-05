@@ -1,12 +1,22 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 import requests
 import toml
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
 # Google Maps API Key
 secrets = toml.load("/workspaces/Green_leaf_app/secrets.toml")
 GOOGLE_API_KEY = secrets["google_maps"]["api_key"]
+
+@app.route("/")
+def home():
+    return "Green Leaf server is running! Visit your frontend to use the search."
+
+@app.route("/frontend")
+def frontend():
+    return render_template("index.html")
 
 @app.route("/search-location", methods=["POST"])
 def search_location():
@@ -17,6 +27,7 @@ def search_location():
         return jsonify({"error": "No query provided"}), 400
 
     # Call Google Geocoding API to get coordinates
+    geocode_url = f"https://maps.googleapis.com/maps/api/geocode/json?address={query}&key={GOOGLE_API_KEY}"
     try:
         response = requests.get(geocode_url)
         response.raise_for_status()
