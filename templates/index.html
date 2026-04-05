@@ -1,78 +1,118 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Green Leaf</title>
-    <link rel="stylesheet" href="style.css">
-     
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
-</head>
-<body>
-
-
-    <div class="title"> 
-        <h1>Green Leaf  </h1>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
+    />
+  </head>
+  <body>
+    <div class="title">
+      <h1>Green Leaf</h1>
     </div>
-    
-    <hr>  
+
+    <hr />
 
     <form>
-        <div class="profile">
-        <button class="accicon"><span class="acc-icon material-symbols-outlined">account_circle</span></button>
-    </div>
-    
-
+      <div class="profile">
+        <button class="accicon">
+          <span class="acc-icon material-symbols-outlined">account_circle</span>
+        </button>
+      </div>
     </form>
-    
 
     <form class="ser" id="searchForm">
-        <div class="search">
-            <span class="  search-icon material-symbols-outlined"> search </span>
-            <input class="search-input" type="search" id="searchInput" placeholder="Search">  
-            <button type="submit">Go</button>
-        </div>
+      <div class="search">
+        <span class="search-icon material-symbols-outlined">search </span>
+        <input
+          class="search-input"
+          type="search"
+          id="searchInput"
+          placeholder="Search"
+        />
+        <button type="submit">Go</button>
+      </div>
     </form>
-    
 
-    <div class="history">
-        <button>History</button>
-    </div>
+    <div id="map" style="width: 100%; height: 500px; margin-top: 20px"></div>
 
     <script>
-        document.getElementById("searchForm").addEventListener("submit", async function(e) {
-            e.preventDefault(); // Prevent form from reloading the page
+      let map;
+      let marker;
 
-            const query = document.getElementById("searchInput").value;
+      async function initMap() {
+        // Request API key from backend
+        const resp = await fetch("/get-api-key");
+        const data = await resp.json();
+        const apiKey = data.api_key;
 
-            if (!query) {
-                alert("Please enter a location");
-                return;
+        // Load Google Maps script dynamically
+        const script = document.createElement("script");
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=loadDefaultMap`;
+        script.async = true;
+        document.head.appendChild(script);
+      }
+
+      function loadDefaultMap() {
+        // Default center (St. Louis)
+        const defaultLocation = { lat: 38.627, lng: -90.1994 };
+        map = new google.maps.Map(document.getElementById("map"), {
+          center: defaultLocation,
+          zoom: 12,
+        });
+        marker = new google.maps.Marker({
+          position: defaultLocation,
+          map: map,
+          title: "Search result",
+        });
+      }
+
+      // Initialize map on page load
+      window.onload = initMap;
+
+      // Handle search
+      document
+        .getElementById("searchForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault(); // Prevent form from reloading the page
+          const query = document.getElementById("searchInput").value;
+          if (!query) {
+            alert("Please enter a location");
+            return;
+          }
+
+          try {
+            // Send search query to backend
+            const response = await fetch("/search-location", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ query: query }),
+            });
+
+            const data = await response.json();
+            console.log("Search result:", data);
+
+            if (data.error) {
+              alert(data.error);
+            } else {
+              // Update map with new marker
+              const newLocation = { lat: data.lat, lng: data.lng };
+              marker.setPosition(newLocation);
+              map.setCenter(newLocation);
             }
-
-            try {
-                // Send search query to backend
-                const response = await fetch("/search-location", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ query: query})
-                });
-
-                const data = await response.json();
-                console.log("Search result:", data);
-
-                if (data.error) {
-                    alert(data.error);
-                } else {
-                    alert(`Location found: ${data.address}\nLatitude: ${data.lat}, Longitude: ${data.lng}`);
-                    // Update map or CO2 calculations here
-                }
-            } catch (err) {
-                console.error(err);
-                alert("Error searching location");
-            }
+          } catch (err) {
+            console.error(err);
+            alert("Error searching location");
+          }
         });
     </script>
-    
-</body>
+
+    <div class="history">
+      <button>History</button>
+    </div>
+  </body>
 </html>

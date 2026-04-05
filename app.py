@@ -6,13 +6,17 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
-# Google Maps API Key
+# Load Google Maps API key from secrets.toml
 secrets = toml.load("secrets.toml")
 GOOGLE_API_KEY = secrets["google_maps"]["api_key"]
 
 @app.route("/")
 def home():
-    return render_template("index.html")
+    return render_template("index.html") # Frontend loads here
+
+@app.route("/get-api-key")
+def get_api_key():
+    return jsonify({"api_key": GOOGLE_API_KEY}) # Return API key to frontend
 
 @app.route("/search-location", methods=["POST"])
 def search_location():
