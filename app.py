@@ -7,15 +7,11 @@ app = Flask(__name__)
 CORS(app)
 
 # Google Maps API Key
-secrets = toml.load("/workspaces/Green_leaf_app/secrets.toml")
+secrets = toml.load("secrets.toml")
 GOOGLE_API_KEY = secrets["google_maps"]["api_key"]
 
 @app.route("/")
 def home():
-    return "Green Leaf server is running! Visit your frontend to use the search."
-
-@app.route("/frontend")
-def frontend():
     return render_template("index.html")
 
 @app.route("/search-location", methods=["POST"])
