@@ -27,9 +27,13 @@ def search_location():
         return jsonify({"error": "No query provided"}), 400
 
     # Call Google Geocoding API to get coordinates
-    geocode_url = f"https://maps.googleapis.com/maps/api/geocode/json?address={query}&key={GOOGLE_API_KEY}"
+    url = "https://maps.googleapis.com/maps/api/geocode/json"
+    params = {
+        "address": query,
+        "key": GOOGLE_API_KEY
+    }
     try:
-        response = requests.get(geocode_url)
+        response = requests.get(url, params=params)
         response.raise_for_status()
         results = response.json()
     except requests.RequestException as e:
@@ -44,6 +48,47 @@ def search_location():
         })
     else:
         return jsonify({"error": "Location not found"}), 404
+    
+@app.route("/get-distance", methods=["POST"])
+def get_distance():
+    data = request.get_json()
+
+    origin = data.get("origin") # {lat, lng}
+    destination = data.get("destination") # {lat, lng}
+
+    if not origin or not destination:
+        return jsonify({"error": "Missing origin or destination"}), 400
+    
+    origin_str = f"{origin['lat']},{origin['lng']}"
+    destination_str = f"{destination['lat']},{destination['lng']}"
+    
+    url = f"https://maps.googleapis.com/maps/api/distancematrix/json"
+
+    params = {
+        "origins": origin_str,
+        "destinations": destination_str,
+        "key": GOOGLE_API_KEY,
+    }
+
+    response = requests.get(url, params=params)
+    result = response.json()
+
+    try:
+        element = result["rows"][0]["elements"][0]
+        distance_meters = element["distance"]["value"] # Distance in meters
+        duration_text = element["duration"]["text"] # Duration as text (e.g., "12 mins")
+        distance_text = element["distance"]["text"] # Distance as text (e.g., "5.2 miles")
+
+        distance_miles = distance_meters * 0.000621371 # Convert meters to miles
+
+        return jsonify({
+            "distance": distance_text, # "5.2 miles"
+            "duration": duration_text,  # "12 mins"
+            "distance_value_miles": distance_miles # 5.2 (Number)
+        })
+    
+    except Exception as e:
+        return jsonify({"error": "Failed to calculate distance"})
 
 if __name__ == "__main__":
     app.run(debug=True)
