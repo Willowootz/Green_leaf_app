@@ -58,16 +58,39 @@
       }
 
       function loadDefaultMap() {
-        // Default center (St. Louis)
-        const defaultLocation = { lat: 38.627, lng: -90.1994 };
+        // Default location if user denies permission
+        let defaultLocation = { lat: 38.627, lng: -90.1994 };
+
+        // Try to get user's current location
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              const userLocation = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude,
+              };
+              initMapWithLocation(userLocation);
+            },
+            (error) => {
+              console.warn("Geolocation failed, using default:", error);
+              initMapWithLocation(defaultLocation);
+            },
+          );
+        } else {
+          console.warn("Geolocation not supported, using default");
+          initMapWithLocation(defaultLocation);
+        }
+      }
+
+      function initMapWithLocation(location) {
         map = new google.maps.Map(document.getElementById("map"), {
-          center: defaultLocation,
+          center: location,
           zoom: 12,
         });
         marker = new google.maps.Marker({
-          position: defaultLocation,
+          position: location,
           map: map,
-          title: "Search result",
+          title: "You are here",
         });
       }
 
@@ -101,8 +124,11 @@
             } else {
               // Update map with new marker
               const newLocation = { lat: data.lat, lng: data.lng };
+
               marker.setPosition(newLocation);
+              marker.setTitle("Search result");
               map.setCenter(newLocation);
+              map.setZoom(14);
             }
           } catch (err) {
             console.error(err);
