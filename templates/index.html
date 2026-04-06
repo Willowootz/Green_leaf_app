@@ -47,6 +47,13 @@
       <button>History</button>
     </div>
 
+    <div id="results" style="margin-top: 20px; text-align: center">
+      <h3>Trip Details</h3>
+      <p id="distanceText">Distance: --</p>
+      <p id="durationText">Time: --</p>
+      <p id="co2Text">CO₂ Emissions: --</p>
+    </div>
+
     <script>
       let map;
       let userLocation = null;
@@ -186,9 +193,12 @@
 
                 const emissions = calculateCO2(distanceMiles, "car"); // Example: using 'car' as transport type
 
-                alert(
-                  `Distance: ${distanceData.distance}\nTime: ${distanceData.duration}\nEstimated CO2 Emissions: ${emissions.toFixed(2)} kg`,
-                );
+                document.getElementById("distanceText").textContent =
+                  `Distance: ${distanceMiles.toFixed(2)} miles`;
+                document.getElementById("durationText").textContent =
+                  `Time: ${distanceData.duration}`;
+                document.getElementById("co2Text").textContent =
+                  `CO₂ Emissions: ${emissions.toFixed(2)} kg`;
               }
             }
           } catch (err) {
