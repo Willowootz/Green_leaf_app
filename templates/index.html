@@ -170,14 +170,14 @@
       function getSelectedCarEmission() {
         const make = document.getElementById("Make").value;
         const model = document.getElementById("Model").value;
-        const engineSize = document.getElementById("EngineSize").value;
+        const engineSize = Number(document.getElementById("EngineSize").value);
         const fuelType = document.getElementById("FuelType").value;
 
         const car = carData.find(
           (c) =>
             c.Make === make &&
             c.Model === model &&
-            c.EngineSize === engineSize &&
+            Number(c.EngineSize) === engineSize &&
             c.FuelType === fuelType,
         );
 
@@ -285,6 +285,13 @@
         const modelSelect = document.getElementById("Model");
         modelSelect.innerHTML = "<option>Select Model</option>";
 
+        const engineSizeSelect = document.getElementById("EngineSize");
+        engineSizeSelect.innerHTML = "<option>Select Engine Size</option>";
+
+        const fuelTypeSelect = document.getElementById("FuelType");
+        fuelTypeSelect.innerHTML = "<option>Select Fuel Type</option>";
+        fuelTypeSelect.disabled = true;
+
         models.forEach((model) => {
           const option = document.createElement("option");
           option.value = model;
@@ -311,6 +318,10 @@
         const engineSizeSelect = document.getElementById("EngineSize");
         engineSizeSelect.innerHTML = "<option>Select Engine Size</option>";
 
+        const fuelTypeSelect = document.getElementById("FuelType");
+        fuelTypeSelect.innerHTML = "<option>Select Fuel Type</option>";
+        fuelTypeSelect.disabled = true;
+
         engineSizes.forEach((size) => {
           const option = document.createElement("option");
           option.value = size;
@@ -324,7 +335,7 @@
         .addEventListener("change", function () {
           const selectedMake = document.getElementById("Make").value;
           const selectedModel = document.getElementById("Model").value;
-          const selectedEngineSize = this.value;
+          const selectedEngineSize = Number(this.value);
 
           const fuelTypes = [
             ...new Set(
@@ -333,14 +344,31 @@
                   (car) =>
                     car.Make === selectedMake &&
                     car.Model === selectedModel &&
-                    car.EngineSize === selectedEngineSize,
+                    Number(car.EngineSize) === selectedEngineSize,
                 )
                 .map((car) => car.FuelType),
             ),
           ];
 
           const fuelTypeSelect = document.getElementById("FuelType");
+          fuelTypeSelect.innerHTML = "";
+
+          if (fuelTypes.length === 0) {
+            fuelTypeSelect.innerHTML = "<option>No Fuel Type Found</option>";
+            fuelTypeSelect.disabled = true;
+            return;
+          }
+
+          if (fuelTypes.length === 1) {
+            const onlyFuel = fuelTypes[0];
+            const upperFuel = onlyFuel.toUpperCase();
+            fuelTypeSelect.innerHTML = `<option value="${onlyFuel}">${fuelTypeMap[upperFuel] || onlyFuel}</option>`;
+            fuelTypeSelect.disabled = true;
+            return;
+          }
+
           fuelTypeSelect.innerHTML = "<option>Select Fuel Type</option>";
+          fuelTypeSelect.disabled = false;
 
           fuelTypes.forEach((type) => {
             const upperType = type.toUpperCase();
