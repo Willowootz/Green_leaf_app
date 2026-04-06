@@ -47,6 +47,13 @@
       <button>History</button>
     </div>
 
+    <div id="carSelector">
+      <select id="Make"></select>
+      <select id="Model"></select>
+      <select id="EngineSize"></select>
+      <select id="FuelType"></select>
+    </div>
+
     <div id="results" style="margin-top: 20px; text-align: center">
       <h3>Trip Details</h3>
       <p id="distanceText">Distance: --</p>
@@ -61,6 +68,23 @@
 
       let userMarker;
       let destinationMarker;
+
+      let carData = [];
+
+      const fuelTypeMap = {
+        X: "Regular Gasoline",
+        Z: "Premium Gasoline",
+        D: "Diesel",
+        E: "Ethanol (E85)",
+        N: "Natural Gas",
+      };
+
+      async function loadCars() {
+        const res = await fetch("/get-cars");
+        carData = await res.json();
+
+        populateMakeDropdown();
+      }
 
       // 🔑 Load Google Maps dynamically
       async function initMap() {
@@ -128,6 +152,38 @@
         return distanceMiles * factor;
       }
 
+      // Populate car make dropdown
+      function populateMakeDropdown() {
+        const makes = [...new Set(carData.map((car) => car.Make))];
+
+        const makeSelect = document.getElementById("Make");
+        makeSelect.innerHTML = "<option>Select Make</option>";
+
+        makes.forEach((Make) => {
+          const option = document.createElement("option");
+          option.value = Make;
+          option.textContent = Make;
+          makeSelect.appendChild(option);
+        });
+      }
+
+      function getSelectedCarEmission() {
+        const make = document.getElementById("Make").value;
+        const model = document.getElementById("Model").value;
+        const engineSize = document.getElementById("EngineSize").value;
+        const fuelType = document.getElementById("FuelType").value;
+
+        const car = carData.find(
+          (c) =>
+            c.Make === make &&
+            c.Model === model &&
+            c.EngineSize === engineSize &&
+            c.FuelType === fuelType,
+        );
+
+        return car ? car.CO2 : null;
+      }
+
       // 🔍 Handle search
       document
         .getElementById("searchForm")
@@ -191,14 +247,22 @@
               if (!distanceData.error) {
                 const distanceMiles = distanceData.distance_value_miles;
 
-                const emissions = calculateCO2(distanceMiles, "car"); // Example: using 'car' as transport type
+                const emissionPerMile = getSelectedCarEmission();
+
+                if (emissionPerMile) {
+                  const totalCO2 = emissionPerMile * distanceMiles;
+
+                  document.getElementById("co2Text").textContent =
+                    `CO₂ Emissions: ${totalCO2.toFixed(2)} kg`;
+                } else {
+                  document.getElementById("co2Text").textContent =
+                    `CO₂ Emissions: Select a vehicle first`;
+                }
 
                 document.getElementById("distanceText").textContent =
                   `Distance: ${distanceMiles.toFixed(2)} miles`;
                 document.getElementById("durationText").textContent =
                   `Time: ${distanceData.duration}`;
-                document.getElementById("co2Text").textContent =
-                  `CO₂ Emissions: ${emissions.toFixed(2)} kg`;
               }
             }
           } catch (err) {
@@ -207,8 +271,91 @@
           }
         });
 
+      document.getElementById("Make").addEventListener("change", function () {
+        const selectedMake = this.value;
+
+        const models = [
+          ...new Set(
+            carData
+              .filter((car) => car.Make === selectedMake)
+              .map((car) => car.Model),
+          ),
+        ];
+
+        const modelSelect = document.getElementById("Model");
+        modelSelect.innerHTML = "<option>Select Model</option>";
+
+        models.forEach((model) => {
+          const option = document.createElement("option");
+          option.value = model;
+          option.textContent = model;
+          modelSelect.appendChild(option);
+        });
+      });
+
+      document.getElementById("Model").addEventListener("change", function () {
+        const selectedMake = document.getElementById("Make").value;
+        const selectedModel = this.value;
+
+        const engineSizes = [
+          ...new Set(
+            carData
+              .filter(
+                (car) =>
+                  car.Make === selectedMake && car.Model === selectedModel,
+              )
+              .map((car) => car.EngineSize),
+          ),
+        ];
+
+        const engineSizeSelect = document.getElementById("EngineSize");
+        engineSizeSelect.innerHTML = "<option>Select Engine Size</option>";
+
+        engineSizes.forEach((size) => {
+          const option = document.createElement("option");
+          option.value = size;
+          option.textContent = size;
+          engineSizeSelect.appendChild(option);
+        });
+      });
+
+      document
+        .getElementById("EngineSize")
+        .addEventListener("change", function () {
+          const selectedMake = document.getElementById("Make").value;
+          const selectedModel = document.getElementById("Model").value;
+          const selectedEngineSize = this.value;
+
+          const fuelTypes = [
+            ...new Set(
+              carData
+                .filter(
+                  (car) =>
+                    car.Make === selectedMake &&
+                    car.Model === selectedModel &&
+                    car.EngineSize === selectedEngineSize,
+                )
+                .map((car) => car.FuelType),
+            ),
+          ];
+
+          const fuelTypeSelect = document.getElementById("FuelType");
+          fuelTypeSelect.innerHTML = "<option>Select Fuel Type</option>";
+
+          fuelTypes.forEach((type) => {
+            const upperType = type.toUpperCase();
+            const option = document.createElement("option");
+            option.value = type;
+            option.textContent = fuelTypeMap[upperType] || type;
+            fuelTypeSelect.appendChild(option);
+          });
+        });
+
       // 🚀 Start everything
-      window.onload = initMap;
+      window.onload = () => {
+        initMap();
+        loadCars();
+      };
     </script>
   </body>
 </html>

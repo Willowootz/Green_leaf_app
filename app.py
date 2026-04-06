@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, render_template
 import requests
 import toml
 from flask_cors import CORS
+import json
 
 app = Flask(__name__)
 CORS(app)
@@ -89,6 +90,12 @@ def get_distance():
     
     except Exception as e:
         return jsonify({"error": "Failed to calculate distance"})
+    
+@app.route("/get-cars")
+def get_cars():
+    with open("data/vehicles.json") as f:
+        data = json.load(f)
+    return jsonify(data)
 
 if __name__ == "__main__":
     app.run(debug=True)
