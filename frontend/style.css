@@ -49,34 +49,327 @@
 }
 
 .profile{
-    
     padding: 10px;
     display: flex;
     justify-content: right;
-    
+    position: relative;
 }
 
 .accicon{
     border: none;
     background-color: transparent;
+    cursor: pointer;
+    color: #4a4a4a;
+}
+
+.accicon .material-symbols-outlined{
+    font-size: 40px;
+}
+
+.profile-menu{
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: min(92vw, 560px);
+    background: #fffef8;
+    border: 1px solid #d8d3bc;
+    border-radius: 16px;
+    padding: 14px;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.16);
+    z-index: 1200;
+}
+
+.profile-menu[hidden]{
+    display: none;
+}
+
+.profile-menu h3{
+    margin: 0 0 10px 0;
+    color: #2f4723;
+}
+
+#carSelector{
+    display: grid;
+    grid-template-columns: repeat(2, minmax(150px, 1fr));
+    gap: 10px;
+}
+
+#carSelector select,
+#saveProfileBtn{
+    min-height: 40px;
+    border-radius: 10px;
+    border: 1px solid #b9b39b;
+    background: #ffffff;
+    padding: 8px 10px;
+    font-size: 14px;
+}
+
+#saveProfileBtn{
+    cursor: pointer;
+    background: #43d141;
+    border-color: #2f9e2e;
+    color: #133313;
+    font-weight: 600;
+    margin-left: 10px;
+}
+
+#profileStatus{
+    grid-column: 1 / -1;
+    margin-left: 0;
+    font-size: 0.95em;
 }
 .acc-icon{
     color: gray;
 }
 
 .history{
-    
     position: fixed;
-    bottom: 0;
-    left: 10px;
-    width: 300px;
-    height: 5vh;
-    border:none
-    
+    top: 96px;
+    right: 16px;
+    z-index: 1300;
+}
+
+.history button{
+    min-height: 44px;
+    border: 1px solid #2f9e2e;
+    background: #43d141;
+    color: #133313;
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.history-panel{
+    position: fixed;
+    top: 148px;
+    right: 16px;
+    width: min(90vw, 390px);
+    max-height: min(72vh, 620px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: #fffef8;
+    border: 1px solid #d8d3bc;
+    border-radius: 14px;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
+    padding: 12px;
+    z-index: 1400;
+}
+
+.history-backdrop{
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.14);
+    backdrop-filter: blur(1px);
+    z-index: 1350;
+}
+
+.history-backdrop[hidden]{
+    display: none;
+}
+
+.history-panel[hidden]{
+    display: none;
+}
+
+.history-panel-header{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.history-panel-header h3{
+    margin: 0;
+    color: #2f4723;
+}
+
+#historyCloseBtn{
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: #4a4a4a;
+    min-width: 44px;
+    min-height: 44px;
+    border-radius: 8px;
+}
+
+#historyTotalCo2{
+    margin: 0;
+    font-weight: 600;
+    color: #1f3d1f;
+}
+
+#historyTripCount{
+    margin: 4px 0 10px 0;
+    color: #2f4723;
+    font-size: 14px;
+}
+
+.history-panel-controls{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 8px 0;
+}
+
+.history-sort-label{
+    font-size: 13px;
+    color: #3d3d3d;
+}
+
+#historySort{
+    min-height: 36px;
+    border: 1px solid #b9b39b;
+    border-radius: 8px;
+    background: #ffffff;
+    padding: 4px 8px;
+    max-width: 180px;
+}
+
+.history-list{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.history-entry{
+    border: 1px solid #d7d2ba;
+    background: #faf8ee;
+    border-radius: 10px;
+    padding: 10px 12px;
+    border-left-width: 5px;
+}
+
+.history-entry p{
+    margin: 3px 0;
+    font-size: 14px;
+}
+
+.history-entry-time{
+    color: #4a4a4a;
+    font-size: 12px !important;
+}
+
+.history-entry-destination{
+    font-weight: 600;
+    color: #182f18;
+    overflow-wrap: anywhere;
+}
+
+.history-entry-emissions{
+    font-weight: 700;
+    font-size: 16px !important;
+}
+
+.history-entry-meta,
+.history-entry-vehicle{
+    color: #2f2f2f;
+    overflow-wrap: anywhere;
+}
+
+.history-entry-low{
+    border-left-color: #2f9e2e;
+}
+
+.history-entry-mid{
+    border-left-color: #d18f00;
+}
+
+.history-entry-high{
+    border-left-color: #b73838;
+}
+
+.history-empty{
+    margin: 8px 0;
+    color: #555;
+    font-size: 14px;
+    text-align: center;
+    padding: 10px 8px;
+}
+
+.history-empty .material-symbols-outlined{
+    font-size: 28px;
+    color: #5f7e5f;
+}
+
+.history-empty p{
+    margin: 6px 0;
+}
+
+.history-empty-hint{
+    color: #6b6b6b;
+    font-size: 13px;
+}
+
+.history-panel-actions{
+    margin-top: 12px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+#clearHistoryBtn{
+    border: 1px solid #bb3d3d;
+    background: #ffe9e9;
+    color: #7a1f1f;
+    border-radius: 8px;
+    min-height: 44px;
+    padding: 6px 12px;
+    cursor: pointer;
+}
+
+.history-entry:focus-visible,
+#historyCloseBtn:focus-visible,
+#clearHistoryBtn:focus-visible,
+#historySort:focus-visible,
+.history button:focus-visible,
+.accicon:focus-visible{
+    outline: 2px solid #1f6f1f;
+    outline-offset: 2px;
 }
 
 body{
     background-color: beige;
+}
+
+@media (max-width: 640px){
+    .profile-menu{
+        width: min(96vw, 420px);
+        right: 0;
+    }
+
+    #carSelector{
+        grid-template-columns: 1fr;
+    }
+
+    #saveProfileBtn{
+        width: 100%;
+        margin-left: 0;
+    }
+
+    .history{
+        top: auto;
+        right: 2vw;
+        bottom: 14px;
+    }
+
+    .history-panel{
+        left: 2vw;
+        right: 2vw;
+        top: auto;
+        bottom: 66px;
+        width: 96vw;
+        max-height: min(56vh, 460px);
+    }
+
+    .history-panel-controls{
+        justify-content: space-between;
+    }
+
+    #historySort{
+        width: 100%;
+        max-width: none;
+    }
 }
 
 
