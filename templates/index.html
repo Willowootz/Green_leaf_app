@@ -52,6 +52,13 @@
       <select id="Model"></select>
       <select id="EngineSize"></select>
       <select id="FuelType"></select>
+      <button id="saveProfileBtn" type="button" style="margin-left: 10px">
+        Save Profile
+      </button>
+      <span
+        id="profileStatus"
+        style="margin-left: 10px; color: green; font-size: 0.95em"
+      ></span>
     </div>
 
     <div id="results" style="margin-top: 20px; text-align: center">
@@ -207,21 +214,75 @@
         });
       }
 
-      function getSelectedCarEmission() {
+      function getSelectedCar() {
         const make = document.getElementById("Make").value;
         const model = document.getElementById("Model").value;
         const engineSize = Number(document.getElementById("EngineSize").value);
         const fuelType = document.getElementById("FuelType").value;
+        return {
+          Make: make,
+          Model: model,
+          EngineSize: engineSize,
+          FuelType: fuelType,
+        };
+      }
 
+      function getSelectedCarEmission() {
+        const { Make, Model, EngineSize, FuelType } = getSelectedCar();
         const car = carData.find(
           (c) =>
-            c.Make === make &&
-            c.Model === model &&
-            Number(c.EngineSize) === engineSize &&
-            c.FuelType === fuelType,
+            c.Make === Make &&
+            c.Model === Model &&
+            Number(c.EngineSize) === EngineSize &&
+            c.FuelType === FuelType,
         );
-
         return car ? car.CO2 : null;
+      }
+
+      // Save profile to localStorage
+      function saveProfile() {
+        const car = getSelectedCar();
+        if (car.Make && car.Model && car.EngineSize && car.FuelType) {
+          localStorage.setItem("userCarProfile", JSON.stringify(car));
+          document.getElementById("profileStatus").textContent =
+            "Profile saved!";
+          setTimeout(() => {
+            document.getElementById("profileStatus").textContent = "";
+          }, 2000);
+        } else {
+          document.getElementById("profileStatus").textContent =
+            "Select all car fields first.";
+          setTimeout(() => {
+            document.getElementById("profileStatus").textContent = "";
+          }, 2000);
+        }
+      }
+
+      // Load profile from localStorage and set dropdowns
+      function loadProfile() {
+        const profile = localStorage.getItem("userCarProfile");
+        if (profile) {
+          try {
+            const car = JSON.parse(profile);
+            if (car.Make) document.getElementById("Make").value = car.Make;
+            // Trigger Model dropdown
+            const event = new Event("change");
+            document.getElementById("Make").dispatchEvent(event);
+            setTimeout(() => {
+              if (car.Model) document.getElementById("Model").value = car.Model;
+              document.getElementById("Model").dispatchEvent(event);
+              setTimeout(() => {
+                if (car.EngineSize)
+                  document.getElementById("EngineSize").value = car.EngineSize;
+                document.getElementById("EngineSize").dispatchEvent(event);
+                setTimeout(() => {
+                  if (car.FuelType)
+                    document.getElementById("FuelType").value = car.FuelType;
+                }, 200);
+              }, 200);
+            }, 200);
+          } catch {}
+        }
       }
 
       // 🔍 Handle search
@@ -398,6 +459,10 @@
           }
         });
 
+      document
+        .getElementById("saveProfileBtn")
+        .addEventListener("click", saveProfile);
+
       document.getElementById("Make").addEventListener("change", function () {
         const selectedMake = this.value;
 
@@ -510,6 +575,7 @@
       window.onload = () => {
         initMap();
         loadCars();
+        setTimeout(loadProfile, 1000); // Load profile after car data loads
       };
     </script>
   </body>
