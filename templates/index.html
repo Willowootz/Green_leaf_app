@@ -91,7 +91,17 @@
           <span class="material-symbols-outlined">close</span>
         </button>
       </div>
+      <div class="history-panel-controls">
+        <label for="historySort" class="history-sort-label">Sort</label>
+        <select id="historySort" aria-label="Sort trip history">
+          <option value="newest">Newest First</option>
+          <option value="oldest">Oldest First</option>
+          <option value="highest">Highest CO₂</option>
+          <option value="lowest">Lowest CO₂</option>
+        </select>
+      </div>
       <p id="historyTotalCo2">Total CO₂ Emissions: 0.00 kg</p>
+      <p id="historyTripCount">Trips Saved: 0</p>
       <div id="historyList" class="history-list"></div>
       <div class="history-panel-actions">
         <button id="clearHistoryBtn" type="button">Clear All</button>
@@ -133,23 +143,94 @@
       const historyPanel = document.getElementById("historyPanel");
       const historyCloseBtn = document.getElementById("historyCloseBtn");
       const clearHistoryBtn = document.getElementById("clearHistoryBtn");
+      const historySortEl = document.getElementById("historySort");
       const historyListEl = document.getElementById("historyList");
       const historyTotalCo2El = document.getElementById("historyTotalCo2");
+      const historyTripCountEl = document.getElementById("historyTripCount");
 
       const TRIP_HISTORY_KEY = "tripHistory";
       const HISTORY_LIMIT = 10;
+      let lastHistoryTrigger = null;
 
       function setProfileMenuState(isOpen) {
         profileMenu.hidden = !isOpen;
         profileToggleBtn.setAttribute("aria-expanded", String(isOpen));
       }
 
-      function setHistoryPanelState(isOpen) {
+      function setHistoryPanelState(isOpen, shouldReturnFocus = false) {
         historyPanel.hidden = !isOpen;
         historyBtn.setAttribute("aria-expanded", String(isOpen));
         if (isOpen) {
+          lastHistoryTrigger = document.activeElement;
           renderHistoryPanel();
+          historySortEl.focus();
+        } else if (shouldReturnFocus && lastHistoryTrigger) {
+          lastHistoryTrigger.focus();
         }
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/\"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function toFiniteNumber(value, fallback = 0) {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : fallback;
+      }
+
+      function sanitizeHistoryEntry(entry) {
+        if (!entry || typeof entry !== "object") return null;
+
+        const distanceKm = toFiniteNumber(entry.distanceKm, 0);
+        const distanceMiles = toFiniteNumber(
+          entry.distanceMiles,
+          distanceKm * 0.621371,
+        );
+        const co2Kg = toFiniteNumber(entry.co2Kg, 0);
+
+        return {
+          id:
+            entry.id ||
+            `${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
+          timestamp: entry.timestamp || new Date().toISOString(),
+          destinationName: entry.destinationName || "Unknown destination",
+          duration: entry.duration || "--",
+          vehicleLabel: entry.vehicleLabel || "Unknown vehicle",
+          distanceKm,
+          distanceMiles,
+          co2Kg,
+        };
+      }
+
+      function sortHistoryEntries(entries, sortBy) {
+        const sorted = [...entries];
+        if (sortBy === "oldest") {
+          return sorted.sort(
+            (a, b) =>
+              new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
+          );
+        }
+        if (sortBy === "highest") {
+          return sorted.sort((a, b) => b.co2Kg - a.co2Kg);
+        }
+        if (sortBy === "lowest") {
+          return sorted.sort((a, b) => a.co2Kg - b.co2Kg);
+        }
+        return sorted.sort(
+          (a, b) =>
+            new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+        );
+      }
+
+      function getEmissionClass(co2Kg) {
+        if (co2Kg >= 10) return "history-entry-high";
+        if (co2Kg >= 5) return "history-entry-mid";
+        return "history-entry-low";
       }
 
       function getTripHistory() {
@@ -157,7 +238,10 @@
           const raw = localStorage.getItem(TRIP_HISTORY_KEY);
           if (!raw) return [];
           const parsed = JSON.parse(raw);
-          return Array.isArray(parsed) ? parsed : [];
+          if (!Array.isArray(parsed)) return [];
+          return parsed
+            .map((entry) => sanitizeHistoryEntry(entry))
+            .filter((entry) => entry !== null);
         } catch (error) {
           console.warn("Could not load trip history:", error);
           return [];
@@ -187,24 +271,27 @@
 
       function renderHistoryPanel() {
         const entries = getTripHistory();
+        const sortedEntries = sortHistoryEntries(entries, historySortEl.value);
         const totalCo2Kg = calculateTotalCo2Kg(entries);
 
         historyTotalCo2El.textContent = `Total CO₂ Emissions: ${totalCo2Kg.toFixed(2)} kg`;
+        historyTripCountEl.textContent = `Trips Saved: ${entries.length}`;
 
-        if (entries.length === 0) {
+        if (sortedEntries.length === 0) {
           historyListEl.innerHTML =
-            '<p class="history-empty">No trips saved yet. Search a route to start tracking.</p>';
+            '<div class="history-empty"><span class="material-symbols-outlined" aria-hidden="true">route</span><p>No trips saved yet.</p><p class="history-empty-hint">Search a route to start tracking your emissions.</p></div>';
           return;
         }
 
-        historyListEl.innerHTML = entries
+        historyListEl.innerHTML = sortedEntries
           .map(
             (entry) => `
-            <article class="history-entry">
+            <article class="history-entry ${getEmissionClass(entry.co2Kg)}" tabindex="0" aria-label="Trip to ${escapeHtml(entry.destinationName)} with ${entry.co2Kg.toFixed(2)} kilograms CO2">
+              <p class="history-entry-destination">${escapeHtml(entry.destinationName)}</p>
+              <p class="history-entry-emissions">${entry.co2Kg.toFixed(2)} kg CO₂</p>
+              <p class="history-entry-meta">${entry.distanceMiles.toFixed(2)} mi (${entry.distanceKm.toFixed(2)} km) • ${escapeHtml(entry.duration)}</p>
+              <p class="history-entry-vehicle">${escapeHtml(entry.vehicleLabel)}</p>
               <p class="history-entry-time">${formatHistoryTimestamp(entry.timestamp)}</p>
-              <p class="history-entry-destination">To: ${entry.destinationName || "Unknown destination"}</p>
-              <p>${entry.distanceMiles.toFixed(2)} mi (${entry.distanceKm.toFixed(2)} km) • ${entry.duration}</p>
-              <p><strong>${entry.co2Kg.toFixed(2)} kg CO₂</strong> • ${entry.vehicleLabel}</p>
             </article>
           `,
           )
@@ -214,6 +301,7 @@
       function saveTripToHistory(greenestRoute, destinationName, carSnapshot) {
         const distanceKm = Number(greenestRoute.distance_km) || 0;
         const co2Kg = (Number(greenestRoute.co2_emissions_g) || 0) / 1000;
+        const safeCar = carSnapshot || {};
         const newEntry = {
           id: `${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
           timestamp: new Date().toISOString(),
@@ -225,7 +313,7 @@
           duration: greenestRoute.duration || "--",
           co2Kg,
           routeIndex: greenestRoute.index,
-          vehicleLabel: `${carSnapshot.Make} ${carSnapshot.Model} ${carSnapshot.EngineSize}L (${carSnapshot.FuelType})`,
+          vehicleLabel: `${safeCar.Make || "Unknown"} ${safeCar.Model || "Vehicle"} ${safeCar.EngineSize || "--"}L (${safeCar.FuelType || "--"})`,
         };
 
         const updatedHistory = [newEntry, ...getTripHistory()].slice(
@@ -255,11 +343,19 @@
       });
 
       historyCloseBtn.addEventListener("click", function () {
-        setHistoryPanelState(false);
+        setHistoryPanelState(false, true);
       });
 
       clearHistoryBtn.addEventListener("click", function () {
+        const shouldClear = window.confirm(
+          "Clear all saved trip history? This cannot be undone.",
+        );
+        if (!shouldClear) return;
         setTripHistory([]);
+        renderHistoryPanel();
+      });
+
+      historySortEl.addEventListener("change", function () {
         renderHistoryPanel();
       });
 
@@ -274,8 +370,7 @@
           profileToggleBtn.focus();
         }
         if (event.key === "Escape" && !historyPanel.hidden) {
-          setHistoryPanelState(false);
-          historyBtn.focus();
+          setHistoryPanelState(false, true);
         }
       });
 
