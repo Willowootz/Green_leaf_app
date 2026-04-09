@@ -122,9 +122,9 @@
 
 .history{
     position: fixed;
-    bottom: 16px;
-    left: 10px;
-    z-index: 1100;
+    top: 96px;
+    right: 16px;
+    z-index: 1300;
 }
 
 .history button{
@@ -140,17 +140,30 @@
 
 .history-panel{
     position: fixed;
-    left: 10px;
-    bottom: 68px;
-    width: min(92vw, 360px);
-    max-height: clamp(320px, 70vh, 560px);
-    overflow: auto;
+    top: 148px;
+    right: 16px;
+    width: min(90vw, 390px);
+    max-height: min(72vh, 620px);
+    overflow-y: auto;
+    overflow-x: hidden;
     background: #fffef8;
     border: 1px solid #d8d3bc;
     border-radius: 14px;
     box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
     padding: 12px;
-    z-index: 1200;
+    z-index: 1400;
+}
+
+.history-backdrop{
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.14);
+    backdrop-filter: blur(1px);
+    z-index: 1350;
+}
+
+.history-backdrop[hidden]{
+    display: none;
 }
 
 .history-panel[hidden]{
@@ -331,10 +344,19 @@ body{
         width: 100%;
     }
 
+    .history{
+        top: auto;
+        right: 2vw;
+        bottom: 14px;
+    }
+
     .history-panel{
         left: 2vw;
+        right: 2vw;
+        top: auto;
+        bottom: 66px;
         width: 96vw;
-        max-height: min(62vh, 520px);
+        max-height: min(56vh, 460px);
     }
 
     .history-panel-controls{

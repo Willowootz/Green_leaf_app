@@ -108,6 +108,8 @@
       </div>
     </div>
 
+    <div id="historyBackdrop" class="history-backdrop" hidden></div>
+
     <div id="results" style="margin-top: 20px; text-align: center">
       <h3>Trip Details</h3>
       <p id="distanceText">Distance: --</p>
@@ -141,6 +143,7 @@
       const profileMenu = document.getElementById("profileMenu");
       const historyBtn = document.getElementById("historyBtn");
       const historyPanel = document.getElementById("historyPanel");
+      const historyBackdrop = document.getElementById("historyBackdrop");
       const historyCloseBtn = document.getElementById("historyCloseBtn");
       const clearHistoryBtn = document.getElementById("clearHistoryBtn");
       const historySortEl = document.getElementById("historySort");
@@ -159,6 +162,7 @@
 
       function setHistoryPanelState(isOpen, shouldReturnFocus = false) {
         historyPanel.hidden = !isOpen;
+        historyBackdrop.hidden = !isOpen;
         historyBtn.setAttribute("aria-expanded", String(isOpen));
         if (isOpen) {
           lastHistoryTrigger = document.activeElement;
@@ -340,6 +344,10 @@
 
       historyPanel.addEventListener("click", function (event) {
         event.stopPropagation();
+      });
+
+      historyBackdrop.addEventListener("click", function () {
+        setHistoryPanelState(false, true);
       });
 
       historyCloseBtn.addEventListener("click", function () {
