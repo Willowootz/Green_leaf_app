@@ -22,9 +22,35 @@
 
     <form>
       <div class="profile">
-        <button class="accicon">
+        <button
+          class="accicon"
+          type="button"
+          id="profileToggleBtn"
+          aria-haspopup="true"
+          aria-expanded="false"
+          aria-controls="profileMenu"
+        >
           <span class="material-symbols-outlined">account_circle</span>
         </button>
+
+        <div id="profileMenu" class="profile-menu" hidden>
+          <h3>Vehicle Profile</h3>
+          <div id="carSelector">
+            <select id="Make"></select>
+            <select id="Model"></select>
+            <select id="EngineSize"></select>
+            <select id="FuelType"></select>
+            <button id="saveProfileBtn" type="button" style="margin-left: 10px">
+              Save Profile
+            </button>
+            <span
+              id="profileStatus"
+              role="status"
+              aria-live="polite"
+              style="margin-left: 10px; font-size: 0.95em"
+            ></span>
+          </div>
+        </div>
       </div>
     </form>
 
@@ -45,22 +71,6 @@
 
     <div class="history">
       <button>History</button>
-    </div>
-
-    <div id="carSelector">
-      <select id="Make"></select>
-      <select id="Model"></select>
-      <select id="EngineSize"></select>
-      <select id="FuelType"></select>
-      <button id="saveProfileBtn" type="button" style="margin-left: 10px">
-        Save Profile
-      </button>
-      <span
-        id="profileStatus"
-        role="status"
-        aria-live="polite"
-        style="margin-left: 10px; font-size: 0.95em"
-      ></span>
     </div>
 
     <div id="results" style="margin-top: 20px; text-align: center">
@@ -91,6 +101,34 @@
         E: "Ethanol (E85)",
         N: "Natural Gas",
       };
+
+      const profileToggleBtn = document.getElementById("profileToggleBtn");
+      const profileMenu = document.getElementById("profileMenu");
+
+      function setProfileMenuState(isOpen) {
+        profileMenu.hidden = !isOpen;
+        profileToggleBtn.setAttribute("aria-expanded", String(isOpen));
+      }
+
+      profileToggleBtn.addEventListener("click", function (event) {
+        event.stopPropagation();
+        setProfileMenuState(profileMenu.hidden);
+      });
+
+      profileMenu.addEventListener("click", function (event) {
+        event.stopPropagation();
+      });
+
+      document.addEventListener("click", function () {
+        setProfileMenuState(false);
+      });
+
+      document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape" && !profileMenu.hidden) {
+          setProfileMenuState(false);
+          profileToggleBtn.focus();
+        }
+      });
 
       async function loadCars() {
         const res = await fetch("/get-cars");
