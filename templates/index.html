@@ -52,6 +52,15 @@
       <select id="Model"></select>
       <select id="EngineSize"></select>
       <select id="FuelType"></select>
+      <button id="saveProfileBtn" type="button" style="margin-left: 10px">
+        Save Profile
+      </button>
+      <span
+        id="profileStatus"
+        role="status"
+        aria-live="polite"
+        style="margin-left: 10px; font-size: 0.95em"
+      ></span>
     </div>
 
     <div id="results" style="margin-top: 20px; text-align: center">
@@ -207,21 +216,108 @@
         });
       }
 
-      function getSelectedCarEmission() {
+      function getSelectedCar() {
         const make = document.getElementById("Make").value;
         const model = document.getElementById("Model").value;
         const engineSize = Number(document.getElementById("EngineSize").value);
         const fuelType = document.getElementById("FuelType").value;
+        return {
+          Make: make,
+          Model: model,
+          EngineSize: engineSize,
+          FuelType: fuelType,
+        };
+      }
 
+      function getSelectedCarEmission() {
+        const { Make, Model, EngineSize, FuelType } = getSelectedCar();
         const car = carData.find(
           (c) =>
-            c.Make === make &&
-            c.Model === model &&
-            Number(c.EngineSize) === engineSize &&
-            c.FuelType === fuelType,
+            c.Make === Make &&
+            c.Model === Model &&
+            Number(c.EngineSize) === EngineSize &&
+            c.FuelType === FuelType,
         );
-
         return car ? car.CO2 : null;
+      }
+
+      function setProfileStatus(message, type) {
+        const el = document.getElementById("profileStatus");
+        el.textContent = message;
+        el.style.color = type === "success" ? "green" : "red";
+        setTimeout(() => {
+          el.textContent = "";
+        }, 5000);
+      }
+
+      // Save profile to localStorage
+      function saveProfile() {
+        const makeSelect = document.getElementById("Make");
+        const modelSelect = document.getElementById("Model");
+        const engineSizeSelect = document.getElementById("EngineSize");
+        const fuelTypeSelect = document.getElementById("FuelType");
+
+        const fuelValue = fuelTypeSelect.value;
+        const fuelValid =
+          fuelValue &&
+          fuelValue !== "Select Fuel Type" &&
+          fuelValue !== "No Fuel Type Found";
+
+        if (
+          makeSelect.selectedIndex <= 0 ||
+          modelSelect.selectedIndex <= 0 ||
+          engineSizeSelect.selectedIndex <= 0 ||
+          !fuelValid
+        ) {
+          setProfileStatus("Select all car fields first.", "error");
+          return;
+        }
+
+        const car = getSelectedCar();
+        try {
+          localStorage.setItem("userCarProfile", JSON.stringify(car));
+          setProfileStatus("Profile saved!", "success");
+        } catch (e) {
+          setProfileStatus(
+            "Could not save profile. Storage may be unavailable.",
+            "error",
+          );
+        }
+      }
+
+      // Load profile from localStorage and set dropdowns
+      function loadProfile() {
+        const profile = localStorage.getItem("userCarProfile");
+        if (!profile) return;
+        try {
+          const car = JSON.parse(profile);
+          if (
+            !car ||
+            typeof car !== "object" ||
+            !car.Make ||
+            !car.Model ||
+            !car.EngineSize ||
+            !car.FuelType
+          ) {
+            throw new Error("Invalid profile data shape");
+          }
+          // Set Make and dispatch change to synchronously populate Model options
+          document.getElementById("Make").value = car.Make;
+          document.getElementById("Make").dispatchEvent(new Event("change"));
+          // Set Model and dispatch change to synchronously populate EngineSize options
+          document.getElementById("Model").value = car.Model;
+          document.getElementById("Model").dispatchEvent(new Event("change"));
+          // Set EngineSize and dispatch change to synchronously populate FuelType options
+          document.getElementById("EngineSize").value = car.EngineSize;
+          document
+            .getElementById("EngineSize")
+            .dispatchEvent(new Event("change"));
+          // Set FuelType
+          document.getElementById("FuelType").value = car.FuelType;
+        } catch (e) {
+          console.warn("Could not load car profile:", e);
+          localStorage.removeItem("userCarProfile");
+        }
       }
 
       // 🔍 Handle search
@@ -398,6 +494,10 @@
           }
         });
 
+      document
+        .getElementById("saveProfileBtn")
+        .addEventListener("click", saveProfile);
+
       document.getElementById("Make").addEventListener("change", function () {
         const selectedMake = this.value;
 
@@ -507,9 +607,10 @@
         });
 
       // 🚀 Start everything
-      window.onload = () => {
+      window.onload = async () => {
         initMap();
-        loadCars();
+        await loadCars();
+        loadProfile();
       };
     </script>
   </body>
