@@ -17,6 +17,126 @@
     
 }
 
+.trip-planner{
+    width: min(94vw, 560px);
+    background: #f7f8f1;
+    border: 1px solid #d6d3bf;
+    border-radius: 14px;
+    padding: 12px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.09);
+}
+
+.trip-planner-header{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.trip-planner-header h3{
+    margin: 0;
+    color: #2f4723;
+}
+
+.trip-optimize-toggle{
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    color: #2f2f2f;
+}
+
+.trip-start-row{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid #d2ccb0;
+    border-radius: 10px;
+    background: #fffef8;
+    min-height: 42px;
+    padding: 8px 10px;
+    margin-bottom: 10px;
+}
+
+.stops-container{
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.stop-row{
+    display: grid;
+    grid-template-columns: auto auto minmax(140px, 1fr) auto;
+    gap: 8px;
+    align-items: center;
+    border: 1px solid #d2ccb0;
+    border-radius: 10px;
+    background: #fffef8;
+    padding: 8px;
+}
+
+.stop-row.dragging{
+    opacity: 0.7;
+}
+
+.stop-drag{
+    cursor: grab;
+    color: #666;
+}
+
+.stop-index{
+    color: #2f4723;
+    font-weight: 600;
+}
+
+.stop-input{
+    width: 100%;
+    min-height: 38px;
+    border: 1px solid #c8c4ae;
+    border-radius: 8px;
+    padding: 6px 8px;
+    font-size: 14px;
+}
+
+.stop-row-actions{
+    display: flex;
+    gap: 4px;
+}
+
+.stop-row-actions button{
+    min-height: 34px;
+    min-width: 34px;
+    border: 1px solid #bbb69e;
+    background: #ffffff;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.trip-planner-actions{
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.trip-planner-actions button{
+    min-height: 40px;
+    border: 1px solid #2f9e2e;
+    background: #43d141;
+    color: #133313;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+#addStopBtn{
+    border-color: #9e9a84;
+    background: #f3f2e6;
+    color: #2f2f2f;
+}
+
 .search-input{
     font-size: 20px;
     font-family: 'Lexend', sans-serif;
@@ -333,6 +453,28 @@ body{
 }
 
 @media (max-width: 640px){
+    .trip-planner-header{
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .stop-row{
+        grid-template-columns: auto auto 1fr;
+    }
+
+    .stop-row-actions{
+        grid-column: 1 / -1;
+        justify-content: flex-end;
+    }
+
+    .trip-planner-actions{
+        flex-direction: column;
+    }
+
+    .trip-planner-actions button{
+        width: 100%;
+    }
+
     .profile-menu{
         width: min(96vw, 420px);
         right: 0;
