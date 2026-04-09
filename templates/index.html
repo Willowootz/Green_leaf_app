@@ -70,7 +70,32 @@
     <div id="map" style="width: 100%; height: 500px; margin-top: 20px"></div>
 
     <div class="history">
-      <button>History</button>
+      <button
+        id="historyBtn"
+        type="button"
+        aria-expanded="false"
+        aria-controls="historyPanel"
+      >
+        History
+      </button>
+    </div>
+
+    <div id="historyPanel" class="history-panel" hidden>
+      <div class="history-panel-header">
+        <h3>Recent Trips</h3>
+        <button
+          id="historyCloseBtn"
+          type="button"
+          aria-label="Close history panel"
+        >
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <p id="historyTotalCo2">Total CO₂ Emissions: 0.00 kg</p>
+      <div id="historyList" class="history-list"></div>
+      <div class="history-panel-actions">
+        <button id="clearHistoryBtn" type="button">Clear All</button>
+      </div>
     </div>
 
     <div id="results" style="margin-top: 20px; text-align: center">
@@ -104,10 +129,111 @@
 
       const profileToggleBtn = document.getElementById("profileToggleBtn");
       const profileMenu = document.getElementById("profileMenu");
+      const historyBtn = document.getElementById("historyBtn");
+      const historyPanel = document.getElementById("historyPanel");
+      const historyCloseBtn = document.getElementById("historyCloseBtn");
+      const clearHistoryBtn = document.getElementById("clearHistoryBtn");
+      const historyListEl = document.getElementById("historyList");
+      const historyTotalCo2El = document.getElementById("historyTotalCo2");
+
+      const TRIP_HISTORY_KEY = "tripHistory";
+      const HISTORY_LIMIT = 10;
 
       function setProfileMenuState(isOpen) {
         profileMenu.hidden = !isOpen;
         profileToggleBtn.setAttribute("aria-expanded", String(isOpen));
+      }
+
+      function setHistoryPanelState(isOpen) {
+        historyPanel.hidden = !isOpen;
+        historyBtn.setAttribute("aria-expanded", String(isOpen));
+        if (isOpen) {
+          renderHistoryPanel();
+        }
+      }
+
+      function getTripHistory() {
+        try {
+          const raw = localStorage.getItem(TRIP_HISTORY_KEY);
+          if (!raw) return [];
+          const parsed = JSON.parse(raw);
+          return Array.isArray(parsed) ? parsed : [];
+        } catch (error) {
+          console.warn("Could not load trip history:", error);
+          return [];
+        }
+      }
+
+      function setTripHistory(entries) {
+        try {
+          localStorage.setItem(TRIP_HISTORY_KEY, JSON.stringify(entries));
+        } catch (error) {
+          console.warn("Could not save trip history:", error);
+        }
+      }
+
+      function calculateTotalCo2Kg(entries) {
+        return entries.reduce((total, entry) => {
+          const co2Kg = Number(entry.co2Kg);
+          return total + (Number.isFinite(co2Kg) ? co2Kg : 0);
+        }, 0);
+      }
+
+      function formatHistoryTimestamp(isoString) {
+        const date = new Date(isoString);
+        if (Number.isNaN(date.getTime())) return "Unknown time";
+        return date.toLocaleString();
+      }
+
+      function renderHistoryPanel() {
+        const entries = getTripHistory();
+        const totalCo2Kg = calculateTotalCo2Kg(entries);
+
+        historyTotalCo2El.textContent = `Total CO₂ Emissions: ${totalCo2Kg.toFixed(2)} kg`;
+
+        if (entries.length === 0) {
+          historyListEl.innerHTML =
+            '<p class="history-empty">No trips saved yet. Search a route to start tracking.</p>';
+          return;
+        }
+
+        historyListEl.innerHTML = entries
+          .map(
+            (entry) => `
+            <article class="history-entry">
+              <p class="history-entry-time">${formatHistoryTimestamp(entry.timestamp)}</p>
+              <p class="history-entry-destination">To: ${entry.destinationName || "Unknown destination"}</p>
+              <p>${entry.distanceMiles.toFixed(2)} mi (${entry.distanceKm.toFixed(2)} km) • ${entry.duration}</p>
+              <p><strong>${entry.co2Kg.toFixed(2)} kg CO₂</strong> • ${entry.vehicleLabel}</p>
+            </article>
+          `,
+          )
+          .join("");
+      }
+
+      function saveTripToHistory(greenestRoute, destinationName, carSnapshot) {
+        const distanceKm = Number(greenestRoute.distance_km) || 0;
+        const co2Kg = (Number(greenestRoute.co2_emissions_g) || 0) / 1000;
+        const newEntry = {
+          id: `${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
+          timestamp: new Date().toISOString(),
+          destinationName: destinationName || "Unknown destination",
+          origin: userLocation,
+          destination: destinationLocation,
+          distanceKm,
+          distanceMiles: distanceKm * 0.621371,
+          duration: greenestRoute.duration || "--",
+          co2Kg,
+          routeIndex: greenestRoute.index,
+          vehicleLabel: `${carSnapshot.Make} ${carSnapshot.Model} ${carSnapshot.EngineSize}L (${carSnapshot.FuelType})`,
+        };
+
+        const updatedHistory = [newEntry, ...getTripHistory()].slice(
+          0,
+          HISTORY_LIMIT,
+        );
+
+        setTripHistory(updatedHistory);
       }
 
       profileToggleBtn.addEventListener("click", function (event) {
@@ -119,14 +245,37 @@
         event.stopPropagation();
       });
 
+      historyBtn.addEventListener("click", function (event) {
+        event.stopPropagation();
+        setHistoryPanelState(historyPanel.hidden);
+      });
+
+      historyPanel.addEventListener("click", function (event) {
+        event.stopPropagation();
+      });
+
+      historyCloseBtn.addEventListener("click", function () {
+        setHistoryPanelState(false);
+      });
+
+      clearHistoryBtn.addEventListener("click", function () {
+        setTripHistory([]);
+        renderHistoryPanel();
+      });
+
       document.addEventListener("click", function () {
         setProfileMenuState(false);
+        setHistoryPanelState(false);
       });
 
       document.addEventListener("keydown", function (event) {
         if (event.key === "Escape" && !profileMenu.hidden) {
           setProfileMenuState(false);
           profileToggleBtn.focus();
+        }
+        if (event.key === "Escape" && !historyPanel.hidden) {
+          setHistoryPanelState(false);
+          historyBtn.focus();
         }
       });
 
@@ -407,6 +556,7 @@
 
             // 📏 Calculate greenest route
             if (userLocation) {
+              const selectedCar = getSelectedCar();
               const carEmissions = getSelectedCarEmission(); // grams per km
               if (!carEmissions) {
                 document.getElementById("co2Text").textContent =
@@ -439,6 +589,11 @@
                   `Time: ${greenest.duration}`;
                 document.getElementById("co2Text").textContent =
                   `CO₂ Emissions: ${co2Kg.toFixed(2)} kg`;
+
+                saveTripToHistory(greenest, query, selectedCar);
+                if (!historyPanel.hidden) {
+                  renderHistoryPanel();
+                }
 
                 // Show all route options
                 const routes = greenestData.routes;
@@ -649,6 +804,7 @@
         initMap();
         await loadCars();
         loadProfile();
+        renderHistoryPanel();
       };
     </script>
   </body>

@@ -121,14 +121,113 @@
 }
 
 .history{
-    
     position: fixed;
-    bottom: 0;
+    bottom: 16px;
     left: 10px;
-    width: 300px;
-    height: 5vh;
-    border:none
-    
+    z-index: 1100;
+}
+
+.history button{
+    min-height: 42px;
+    border: 1px solid #2f9e2e;
+    background: #43d141;
+    color: #133313;
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.history-panel{
+    position: fixed;
+    left: 10px;
+    bottom: 68px;
+    width: min(92vw, 360px);
+    max-height: min(70vh, 560px);
+    overflow: auto;
+    background: #fffef8;
+    border: 1px solid #d8d3bc;
+    border-radius: 14px;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
+    padding: 12px;
+    z-index: 1200;
+}
+
+.history-panel[hidden]{
+    display: none;
+}
+
+.history-panel-header{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.history-panel-header h3{
+    margin: 0;
+    color: #2f4723;
+}
+
+#historyCloseBtn{
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: #4a4a4a;
+}
+
+#historyTotalCo2{
+    margin: 0 0 10px 0;
+    font-weight: 600;
+    color: #1f3d1f;
+}
+
+.history-list{
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.history-entry{
+    border: 1px solid #d7d2ba;
+    background: #faf8ee;
+    border-radius: 10px;
+    padding: 8px 10px;
+}
+
+.history-entry p{
+    margin: 4px 0;
+    font-size: 14px;
+}
+
+.history-entry-time{
+    color: #6b6b6b;
+}
+
+.history-entry-destination{
+    font-weight: 600;
+}
+
+.history-empty{
+    margin: 8px 0;
+    color: #666;
+    font-size: 14px;
+}
+
+.history-panel-actions{
+    margin-top: 12px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+#clearHistoryBtn{
+    border: 1px solid #bb3d3d;
+    background: #ffe9e9;
+    color: #7a1f1f;
+    border-radius: 8px;
+    min-height: 38px;
+    padding: 6px 12px;
+    cursor: pointer;
 }
 
 body{
@@ -147,6 +246,11 @@ body{
 
     #saveProfileBtn{
         width: 100%;
+    }
+
+    .history-panel{
+        left: 2vw;
+        width: 96vw;
     }
 }
 
