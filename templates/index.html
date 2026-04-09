@@ -40,14 +40,13 @@
             <select id="Model"></select>
             <select id="EngineSize"></select>
             <select id="FuelType"></select>
-            <button id="saveProfileBtn" type="button" style="margin-left: 10px">
+            <button id="saveProfileBtn" type="button">
               Save Profile
             </button>
             <span
               id="profileStatus"
               role="status"
               aria-live="polite"
-              style="margin-left: 10px; font-size: 0.95em"
             ></span>
           </div>
         </div>
@@ -201,8 +200,19 @@
           id:
             entry.id ||
             `${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
-          timestamp: entry.timestamp || new Date().toISOString(),
+          timestamp: (() => {
+            const ts = entry.timestamp;
+            const parsed = ts ? new Date(ts).getTime() : NaN;
+            return Number.isFinite(parsed)
+              ? new Date(parsed).toISOString()
+              : new Date().toISOString();
+          })(),
           destinationName: entry.destinationName || "Unknown destination",
+          origin: entry.origin ?? null,
+          destination: entry.destination ?? null,
+          routeIndex: Number.isFinite(Number(entry.routeIndex))
+            ? Number(entry.routeIndex)
+            : null,
           duration: entry.duration || "--",
           vehicleLabel: entry.vehicleLabel || "Unknown vehicle",
           distanceKm,

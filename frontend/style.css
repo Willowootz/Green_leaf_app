@@ -110,11 +110,13 @@
     border-color: #2f9e2e;
     color: #133313;
     font-weight: 600;
+    margin-left: 10px;
 }
 
 #profileStatus{
     grid-column: 1 / -1;
-    margin-left: 0 !important;
+    margin-left: 0;
+    font-size: 0.95em;
 }
 .acc-icon{
     color: gray;
@@ -342,6 +344,7 @@ body{
 
     #saveProfileBtn{
         width: 100%;
+        margin-left: 0;
     }
 
     .history{
