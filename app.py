@@ -97,5 +97,68 @@ def get_cars():
         data = json.load(f)
     return jsonify(data)
 
+
+# New endpoint: Get the greenest route (lowest CO2 emissions)
+@app.route("/get-greenest-route", methods=["POST"])
+def get_greenest_route():
+    data = request.get_json()
+
+    origin = data.get("origin")  # {lat, lng}
+    destination = data.get("destination")  # {lat, lng}
+    car_emissions = data.get("car_emissions")  # grams CO2 per km
+
+    if not origin or not destination or car_emissions is None:
+        return jsonify({"error": "Missing origin, destination, or car_emissions"}), 400
+
+    origin_str = f"{origin['lat']},{origin['lng']}"
+    destination_str = f"{destination['lat']},{destination['lng']}"
+
+    url = "https://maps.googleapis.com/maps/api/directions/json"
+    params = {
+        "origin": origin_str,
+        "destination": destination_str,
+        "alternatives": "true",
+        "key": GOOGLE_API_KEY,
+    }
+
+    response = requests.get(url, params=params)
+    result = response.json()
+
+    if result.get("status") != "OK":
+        return jsonify({"error": "Failed to get routes", "details": result.get("error_message")}), 500
+
+    routes = result.get("routes", [])
+    if not routes:
+        return jsonify({"error": "No routes found"}), 404
+
+    # Gather all routes with emissions
+    route_infos = []
+    for idx, route in enumerate(routes):
+        total_distance_m = sum(leg["distance"]["value"] for leg in route["legs"])
+        total_distance_km = total_distance_m / 1000.0
+        emissions = total_distance_km * car_emissions  # grams CO2
+        route_infos.append({
+            "index": idx,
+            "distance_km": total_distance_km,
+            "duration": route["legs"][0]["duration"]["text"],
+            "co2_emissions_g": emissions,
+            "polyline": route["overview_polyline"]["points"],
+            "route": route
+        })
+
+    # Find the greenest route (lowest emissions)
+    greenest = min(route_infos, key=lambda r: r["co2_emissions_g"])
+    for r in route_infos:
+        if r is not greenest:
+            r["extra_emissions_g"] = r["co2_emissions_g"] - greenest["co2_emissions_g"]
+        else:
+            r["extra_emissions_g"] = 0
+
+    return jsonify({
+        "greenest": greenest,
+        "routes": route_infos,
+        "savings_g": [r["extra_emissions_g"] for r in route_infos],
+    })
+
 if __name__ == "__main__":
     app.run(debug=True)
