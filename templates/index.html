@@ -80,20 +80,42 @@
         </p>
 
         <form class="ser" id="searchForm">
-          <label class="sr-only" for="searchInput">Destination</label>
-          <div class="search">
-            <span class="material-symbols-outlined" aria-hidden="true"
-              >search</span
-            >
-            <input
-              class="search-input"
-              type="search"
-              id="searchInput"
-              placeholder="Enter destination"
-            />
-            <button type="submit" id="searchBtn" aria-label="Get route options">
-              Get Route
-            </button>
+          <div class="destination-stack">
+            <label class="sr-only" for="searchInput">Destination</label>
+            <div class="search">
+              <span class="material-symbols-outlined" aria-hidden="true"
+                >search</span
+              >
+              <input
+                class="search-input"
+                type="search"
+                id="searchInput"
+                placeholder="Enter destination"
+              />
+              <button
+                type="submit"
+                id="searchBtn"
+                aria-label="Get route options"
+              >
+                Get Route
+              </button>
+            </div>
+
+            <div id="extraStopsContainer" class="extra-stops"></div>
+
+            <div class="planner-controls">
+              <button
+                type="button"
+                id="addStopBtn"
+                class="planner-secondary-btn"
+              >
+                Add Stop
+              </button>
+              <label class="optimize-toggle" for="optimizeOrderToggle">
+                <input type="checkbox" id="optimizeOrderToggle" />
+                Optimize stop order
+              </label>
+            </div>
           </div>
         </form>
 
@@ -206,12 +228,25 @@
       const activeVehicleBadgeEl =
         document.getElementById("activeVehicleBadge");
       const routesListEl = document.getElementById("routesList");
+      const addStopBtn = document.getElementById("addStopBtn");
+      const extraStopsContainer = document.getElementById(
+        "extraStopsContainer",
+      );
+      const optimizeOrderToggle = document.getElementById(
+        "optimizeOrderToggle",
+      );
 
       const TRIP_HISTORY_KEY = "tripHistory";
       const HISTORY_LIMIT = 10;
       let lastHistoryTrigger = null;
       let currentRoutes = [];
       let currentGreenestIndex = 0;
+      const MAX_STOPS = 5;
+      let stopIdCounter = 0;
+      let extraStopIds = [];
+      const stopCoordinates = new Map();
+      const stopDraftValues = new Map();
+      let stopMarkers = [];
 
       function setProfileMenuState(isOpen) {
         profileMenu.hidden = !isOpen;
@@ -266,6 +301,161 @@
         document.getElementById("distanceText").textContent = "Distance: --";
         document.getElementById("durationText").textContent = "Time: --";
         document.getElementById("co2Text").textContent = "CO₂ Emissions: --";
+      }
+
+      function clearStopMarkers() {
+        stopMarkers.forEach((marker) => marker.setMap(null));
+        stopMarkers = [];
+      }
+
+      function drawStopMarkers(resolvedStops) {
+        clearStopMarkers();
+        resolvedStops.forEach((stop, index) => {
+          const marker = new google.maps.Marker({
+            position: { lat: stop.lat, lng: stop.lng },
+            map,
+            label: String(index + 1),
+            title: stop.name || `Stop ${index + 1}`,
+          });
+          stopMarkers.push(marker);
+        });
+      }
+
+      function createExtraStopInput(stopId) {
+        return `
+          <div class="extra-stop-row" data-stop-id="${stopId}">
+            <span class="material-symbols-outlined" aria-hidden="true"
+              >search</span
+            >
+            <input
+              class="search-input stop-input"
+              type="search"
+              id="stopInput-${stopId}"
+              placeholder="Add another destination"
+            />
+            <button type="button" class="planner-danger-btn" data-remove-stop="${stopId}">Remove</button>
+          </div>
+        `;
+      }
+
+      function renderExtraStops() {
+        extraStopsContainer
+          .querySelectorAll(".stop-input")
+          .forEach((inputEl) => {
+            stopDraftValues.set(inputEl.id, inputEl.value);
+          });
+
+        extraStopsContainer.innerHTML = extraStopIds
+          .map((stopId) => createExtraStopInput(stopId))
+          .join("");
+
+        extraStopIds.forEach((stopId) => {
+          const inputId = `stopInput-${stopId}`;
+          const inputEl = document.getElementById(inputId);
+          if (inputEl && stopDraftValues.has(inputId)) {
+            inputEl.value = stopDraftValues.get(inputId);
+          }
+          attachAutocompleteToInput(inputEl);
+        });
+
+        const removeButtons =
+          extraStopsContainer.querySelectorAll("[data-remove-stop]");
+        removeButtons.forEach((btn) => {
+          btn.addEventListener("click", function () {
+            const removeId = Number(this.getAttribute("data-remove-stop"));
+            const inputId = `stopInput-${removeId}`;
+            extraStopIds = extraStopIds.filter((id) => id !== removeId);
+            stopCoordinates.delete(inputId);
+            stopDraftValues.delete(inputId);
+            renderExtraStops();
+          });
+        });
+      }
+
+      function attachAutocompleteToInput(inputEl) {
+        if (
+          !inputEl ||
+          !window.google ||
+          !window.google.maps ||
+          !window.google.maps.places
+        ) {
+          return;
+        }
+
+        if (inputEl.dataset.autocompleteAttached === "true") {
+          return;
+        }
+
+        const autocomplete = new google.maps.places.Autocomplete(inputEl);
+        autocomplete.setFields(["geometry", "name", "formatted_address"]);
+        autocomplete.addListener("place_changed", function () {
+          const place = autocomplete.getPlace();
+          if (!place.geometry) return;
+          stopCoordinates.set(inputEl.id, {
+            lat: place.geometry.location.lat(),
+            lng: place.geometry.location.lng(),
+            name: place.name || inputEl.value.trim(),
+          });
+          stopDraftValues.set(inputEl.id, inputEl.value);
+        });
+
+        inputEl.addEventListener("input", function () {
+          stopCoordinates.delete(inputEl.id);
+          stopDraftValues.set(inputEl.id, inputEl.value);
+        });
+
+        inputEl.dataset.autocompleteAttached = "true";
+      }
+
+      async function resolveStopByInput(inputEl) {
+        const label = inputEl.value.trim();
+        if (!label) {
+          return null;
+        }
+
+        const saved = stopCoordinates.get(inputEl.id);
+        if (saved && Number.isFinite(saved.lat) && Number.isFinite(saved.lng)) {
+          return { lat: saved.lat, lng: saved.lng, name: label };
+        }
+
+        const response = await fetch("/search-location", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query: label }),
+        });
+        const data = await response.json();
+        if (data.error) {
+          throw new Error(data.error);
+        }
+        return { lat: data.lat, lng: data.lng, name: label };
+      }
+
+      async function collectResolvedStops() {
+        const allStopInputs = [
+          document.getElementById("searchInput"),
+          ...Array.from(document.querySelectorAll(".stop-input")),
+        ];
+
+        const filledInputs = allStopInputs.filter(
+          (inputEl) => inputEl && inputEl.value.trim().length > 0,
+        );
+
+        if (filledInputs.length === 0) {
+          throw new Error("Please enter at least one destination.");
+        }
+
+        if (filledInputs.length > MAX_STOPS) {
+          throw new Error(`You can add up to ${MAX_STOPS} destinations.`);
+        }
+
+        const resolved = [];
+        for (const inputEl of filledInputs) {
+          const stop = await resolveStopByInput(inputEl);
+          if (stop) {
+            resolved.push(stop);
+          }
+        }
+        return resolved;
       }
 
       function updateActiveVehicleBadge(car = null) {
@@ -570,6 +760,18 @@
         renderHistoryPanel();
       });
 
+      addStopBtn.addEventListener("click", function () {
+        const currentCount = 1 + extraStopIds.length;
+        if (currentCount >= MAX_STOPS) {
+          setUiStatus(`You can add up to ${MAX_STOPS} destinations.`, "info");
+          return;
+        }
+
+        stopIdCounter += 1;
+        extraStopIds.push(stopIdCounter);
+        renderExtraStops();
+      });
+
       routesListEl.addEventListener("click", function (event) {
         const routeCard = event.target.closest(".route-option");
         if (!routeCard) return;
@@ -653,36 +855,8 @@
 
       // Set up Google Places Autocomplete on the search bar
       function setupAutocomplete() {
-        if (!window.google || !window.google.maps || !window.google.maps.places)
-          return;
         const input = document.getElementById("searchInput");
-        const autocomplete = new google.maps.places.Autocomplete(input);
-        autocomplete.setFields(["geometry", "name", "formatted_address"]);
-        autocomplete.addListener("place_changed", function () {
-          const place = autocomplete.getPlace();
-          if (!place.geometry) return;
-          // Set destinationLocation and trigger the rest of the search logic
-          destinationLocation = {
-            lat: place.geometry.location.lat(),
-            lng: place.geometry.location.lng(),
-          };
-          // Place/update destination marker
-          if (destinationMarker) {
-            destinationMarker.setPosition(destinationLocation);
-          } else {
-            destinationMarker = new google.maps.Marker({
-              position: destinationLocation,
-              map: map,
-              title: "Destination",
-            });
-          }
-          map.setCenter(destinationLocation);
-          map.setZoom(14);
-          // Optionally, auto-submit the form to trigger route search
-          document
-            .getElementById("searchForm")
-            .dispatchEvent(new Event("submit"));
-        });
+        attachAutocompleteToInput(input);
       }
 
       // 🗺️ Initialize map
@@ -851,50 +1025,15 @@
           e.preventDefault();
           clearUiStatus();
 
-          const query = document.getElementById("searchInput").value.trim();
-
-          if (!query) {
-            setUiStatus(
-              "Please enter a destination before searching.",
-              "error",
-            );
-            return;
-          }
-
           try {
             setSearchLoading(true);
-            const response = await fetch("/search-location", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ query: query }),
-            });
+            const resolvedStops = await collectResolvedStops();
+            const finalStop = resolvedStops[resolvedStops.length - 1];
+            destinationLocation = { lat: finalStop.lat, lng: finalStop.lng };
 
-            const data = await response.json();
-
-            if (data.error) {
-              setUiStatus(data.error, "error");
-              return;
-            }
-
-            // 📍 Set destination
-            destinationLocation = {
-              lat: data.lat,
-              lng: data.lng,
-            };
-
-            // Place/update destination marker
-            if (destinationMarker) {
-              destinationMarker.setPosition(destinationLocation);
-            } else {
-              destinationMarker = new google.maps.Marker({
-                position: destinationLocation,
-                map: map,
-                title: "Destination",
-              });
-            }
-
+            drawStopMarkers(resolvedStops);
             map.setCenter(destinationLocation);
-            map.setZoom(14);
+            map.setZoom(12);
 
             // 📏 Calculate greenest route
             if (userLocation) {
@@ -915,7 +1054,8 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                   origin: userLocation,
-                  destination: destinationLocation,
+                  stops: resolvedStops,
+                  optimize_order: optimizeOrderToggle.checked,
                   car_emissions: carEmissions, // grams per km
                 }),
               });
@@ -936,7 +1076,7 @@
                 document.getElementById("co2Text").textContent =
                   `CO₂ Emissions: ${co2Kg.toFixed(2)} kg`;
 
-                saveTripToHistory(greenest, query, selectedCar);
+                saveTripToHistory(greenest, finalStop.name, selectedCar);
                 if (!historyPanel.hidden) {
                   renderHistoryPanel();
                 }
@@ -981,10 +1121,10 @@
             }
           } catch (err) {
             console.error(err);
-            setUiStatus(
-              "Could not search location or route. Please try again.",
-              "error",
-            );
+            const message = err?.message
+              ? err.message
+              : "Could not search location or route. Please try again.";
+            setUiStatus(message, "error");
           } finally {
             setSearchLoading(false);
           }
@@ -1107,6 +1247,7 @@
         initMap();
         await loadCars();
         loadProfile();
+        renderExtraStops();
         updateActiveVehicleBadge();
         renderHistoryPanel();
       };

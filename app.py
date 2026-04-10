@@ -7,6 +7,16 @@ import json
 app = Flask(__name__, static_folder="frontend")
 CORS(app)
 
+
+def format_duration(total_seconds):
+    hours, remainder = divmod(int(total_seconds), 3600)
+    minutes, _ = divmod(remainder, 60)
+    if hours and minutes:
+        return f"{hours} hr {minutes} min"
+    if hours:
+        return f"{hours} hr"
+    return f"{minutes} min"
+
 # Load Google Maps API key from secrets.toml
 secrets = toml.load("secrets.toml")
 GOOGLE_API_KEY = secrets["google_maps"]["api_key"]
@@ -105,13 +115,43 @@ def get_greenest_route():
 
     origin = data.get("origin")  # {lat, lng}
     destination = data.get("destination")  # {lat, lng}
+    stops = data.get("stops") or []
+    optimize_order = bool(data.get("optimize_order", False))
     car_emissions = data.get("car_emissions")  # grams CO2 per km
+
+    normalized_stops = []
+    if isinstance(stops, list):
+        for stop in stops:
+            if not isinstance(stop, dict):
+                continue
+            lat = stop.get("lat")
+            lng = stop.get("lng")
+            if lat is None or lng is None:
+                continue
+            normalized_stops.append(
+                {
+                    "lat": lat,
+                    "lng": lng,
+                    "name": stop.get("name") or stop.get("label") or "Stop",
+                }
+            )
+
+    if normalized_stops:
+        destination = {
+            "lat": normalized_stops[-1]["lat"],
+            "lng": normalized_stops[-1]["lng"],
+        }
 
     if not origin or not destination or car_emissions is None:
         return jsonify({"error": "Missing origin, destination, or car_emissions"}), 400
 
     origin_str = f"{origin['lat']},{origin['lng']}"
     destination_str = f"{destination['lat']},{destination['lng']}"
+
+    waypoint_stops = normalized_stops[:-1] if normalized_stops else []
+    waypoint_values = [f"{stop['lat']},{stop['lng']}" for stop in waypoint_stops]
+    if waypoint_values and optimize_order:
+        waypoint_values.insert(0, "optimize:true")
 
     url = "https://maps.googleapis.com/maps/api/directions/json"
     params = {
@@ -120,6 +160,8 @@ def get_greenest_route():
         "alternatives": "true",
         "key": GOOGLE_API_KEY,
     }
+    if waypoint_values:
+        params["waypoints"] = "|".join(waypoint_values)
 
     response = requests.get(url, params=params)
     result = response.json()
@@ -135,15 +177,23 @@ def get_greenest_route():
     route_infos = []
     for idx, route in enumerate(routes):
         total_distance_m = sum(leg["distance"]["value"] for leg in route["legs"])
+        total_duration_s = sum(leg["duration"]["value"] for leg in route["legs"])
         total_distance_km = total_distance_m / 1000.0
         emissions = total_distance_km * car_emissions  # grams CO2
         route_infos.append({
             "index": idx,
             "distance_km": total_distance_km,
-            "duration": route["legs"][0]["duration"]["text"],
+            "duration": format_duration(total_duration_s),
             "co2_emissions_g": emissions,
             "polyline": route["overview_polyline"]["points"],
-            "route": route
+            "waypoint_order": route.get("waypoint_order", []),
+            "legs_summary": [
+                {
+                    "distance_text": leg["distance"]["text"],
+                    "duration_text": leg["duration"]["text"],
+                }
+                for leg in route["legs"]
+            ],
         })
 
     # Find the greenest route (lowest emissions)
@@ -158,6 +208,8 @@ def get_greenest_route():
         "greenest": greenest,
         "routes": route_infos,
         "savings_g": [r["extra_emissions_g"] for r in route_infos],
+        "stops": normalized_stops,
+        "optimize_order": optimize_order,
     })
 
 if __name__ == "__main__":
