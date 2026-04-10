@@ -5,7 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Green Leaf</title>
 
-    <link rel="stylesheet" href="style.css" />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
 
     <link
       rel="stylesheet"
@@ -14,14 +17,18 @@
   </head>
 
   <body>
-    <div class="title">
-      <h1>Green Leaf</h1>
-    </div>
+    <header class="app-header">
+      <div class="title-block">
+        <h1>Green Leaf</h1>
+        <p class="title-subtitle">
+          Lower-emission route planning, built for everyday driving.
+        </p>
+      </div>
 
-    <hr />
-
-    <form>
-      <div class="profile">
+      <div class="profile" aria-label="Vehicle profile controls">
+        <p id="activeVehicleBadge" class="active-vehicle-badge">
+          Vehicle: Not set
+        </p>
         <button
           class="accicon"
           type="button"
@@ -29,44 +36,100 @@
           aria-haspopup="true"
           aria-expanded="false"
           aria-controls="profileMenu"
+          aria-label="Open vehicle profile"
         >
-          <span class="material-symbols-outlined">account_circle</span>
+          <span class="material-symbols-outlined" aria-hidden="true"
+            >account_circle</span
+          >
         </button>
 
         <div id="profileMenu" class="profile-menu" hidden>
           <h3>Vehicle Profile</h3>
+          <p class="profile-intro">
+            Set your car once so each route can estimate your emissions.
+          </p>
           <div id="carSelector">
-            <select id="Make"></select>
-            <select id="Model"></select>
-            <select id="EngineSize"></select>
-            <select id="FuelType"></select>
-            <button id="saveProfileBtn" type="button">
-              Save Profile
-            </button>
-            <span
-              id="profileStatus"
-              role="status"
-              aria-live="polite"
-            ></span>
+            <div class="field-group">
+              <label for="Make">Make</label>
+              <select id="Make"></select>
+            </div>
+            <div class="field-group">
+              <label for="Model">Model</label>
+              <select id="Model"></select>
+            </div>
+            <div class="field-group">
+              <label for="EngineSize">Engine Size</label>
+              <select id="EngineSize"></select>
+            </div>
+            <div class="field-group">
+              <label for="FuelType">Fuel Type</label>
+              <select id="FuelType"></select>
+            </div>
+            <button id="saveProfileBtn" type="button">Save Profile</button>
+            <span id="profileStatus" role="status" aria-live="polite"></span>
           </div>
         </div>
       </div>
-    </form>
+    </header>
 
-    <form class="ser" id="searchForm">
-      <div class="search">
-        <span class="material-symbols-outlined">search</span>
-        <input
-          class="search-input"
-          type="search"
-          id="searchInput"
-          placeholder="Search"
-        />
-        <button type="submit">Go</button>
-      </div>
-    </form>
+    <main class="app-main">
+      <section class="planner-card" aria-labelledby="plannerHeading">
+        <h2 id="plannerHeading">Plan a Trip</h2>
+        <p class="planner-hint">
+          Search your destination and compare route emissions before you drive.
+        </p>
 
-    <div id="map" style="width: 100%; height: 500px; margin-top: 20px"></div>
+        <form class="ser" id="searchForm">
+          <label class="sr-only" for="searchInput">Destination</label>
+          <div class="search">
+            <span class="material-symbols-outlined" aria-hidden="true"
+              >search</span
+            >
+            <input
+              class="search-input"
+              type="search"
+              id="searchInput"
+              placeholder="Enter destination"
+            />
+            <button type="submit" id="searchBtn" aria-label="Get route options">
+              Get Route
+            </button>
+          </div>
+        </form>
+
+        <div
+          id="uiStatus"
+          class="status-message"
+          role="alert"
+          aria-live="assertive"
+          hidden
+        ></div>
+      </section>
+
+      <section class="map-card" aria-label="Map view">
+        <div id="map" class="map-stage" style="min-height: 420px"></div>
+      </section>
+
+      <section
+        id="results"
+        class="trip-details-card"
+        aria-labelledby="tripDetailsHeading"
+      >
+        <h3 id="tripDetailsHeading">Trip Details</h3>
+        <div class="trip-metrics">
+          <p id="distanceText">Distance: --</p>
+          <p id="durationText">Time: --</p>
+          <p id="co2Text">CO₂ Emissions: --</p>
+        </div>
+      </section>
+
+      <section
+        id="routesList"
+        class="routes-list-section"
+        aria-live="polite"
+        aria-label="Route options"
+      ></section>
+    </main>
 
     <div class="history">
       <button
@@ -109,17 +172,6 @@
 
     <div id="historyBackdrop" class="history-backdrop" hidden></div>
 
-    <div id="results" style="margin-top: 20px; text-align: center">
-      <h3>Trip Details</h3>
-      <p id="distanceText">Distance: --</p>
-      <p id="durationText">Time: --</p>
-      <p id="co2Text">CO₂ Emissions: --</p>
-    </div>
-    <div
-      id="routesList"
-      style="margin: 20px auto; max-width: 600px; text-align: left"
-    ></div>
-
     <script>
       let map;
       let userLocation = null;
@@ -149,10 +201,17 @@
       const historyListEl = document.getElementById("historyList");
       const historyTotalCo2El = document.getElementById("historyTotalCo2");
       const historyTripCountEl = document.getElementById("historyTripCount");
+      const uiStatusEl = document.getElementById("uiStatus");
+      const searchBtn = document.getElementById("searchBtn");
+      const activeVehicleBadgeEl =
+        document.getElementById("activeVehicleBadge");
+      const routesListEl = document.getElementById("routesList");
 
       const TRIP_HISTORY_KEY = "tripHistory";
       const HISTORY_LIMIT = 10;
       let lastHistoryTrigger = null;
+      let currentRoutes = [];
+      let currentGreenestIndex = 0;
 
       function setProfileMenuState(isOpen) {
         profileMenu.hidden = !isOpen;
@@ -184,6 +243,47 @@
       function toFiniteNumber(value, fallback = 0) {
         const parsed = Number(value);
         return Number.isFinite(parsed) ? parsed : fallback;
+      }
+
+      function setUiStatus(message, type = "info") {
+        uiStatusEl.hidden = false;
+        uiStatusEl.className = `status-message status-${type}`;
+        uiStatusEl.textContent = message;
+      }
+
+      function clearUiStatus() {
+        uiStatusEl.hidden = true;
+        uiStatusEl.textContent = "";
+        uiStatusEl.className = "status-message";
+      }
+
+      function setSearchLoading(isLoading) {
+        searchBtn.disabled = isLoading;
+        searchBtn.textContent = isLoading ? "Searching..." : "Get Route";
+      }
+
+      function resetTripDisplay() {
+        document.getElementById("distanceText").textContent = "Distance: --";
+        document.getElementById("durationText").textContent = "Time: --";
+        document.getElementById("co2Text").textContent = "CO₂ Emissions: --";
+      }
+
+      function updateActiveVehicleBadge(car = null) {
+        const resolvedCar = car || getSelectedCar();
+        const hasVehicle =
+          resolvedCar &&
+          resolvedCar.Make &&
+          resolvedCar.Model &&
+          Number.isFinite(Number(resolvedCar.EngineSize)) &&
+          resolvedCar.FuelType;
+        if (!hasVehicle) {
+          activeVehicleBadgeEl.textContent = "Vehicle: Not set";
+          activeVehicleBadgeEl.classList.add("badge-warning");
+          return;
+        }
+
+        activeVehicleBadgeEl.textContent = `Vehicle: ${resolvedCar.Make} ${resolvedCar.Model} ${resolvedCar.EngineSize}L (${resolvedCar.FuelType})`;
+        activeVehicleBadgeEl.classList.remove("badge-warning");
       }
 
       function sanitizeHistoryEntry(entry) {
@@ -338,6 +438,99 @@
         setTripHistory(updatedHistory);
       }
 
+      function highlightRoutePolylines(selectedIndex) {
+        currentRoutes.forEach((route, i) => {
+          if (window.routePolylines && window.routePolylines[i]) {
+            window.routePolylines[i].setOptions({
+              strokeColor:
+                i === selectedIndex
+                  ? "#0c7a43"
+                  : i === currentGreenestIndex
+                    ? "#00b300"
+                    : "#7d8790",
+              strokeOpacity:
+                i === selectedIndex
+                  ? 1.0
+                  : i === currentGreenestIndex
+                    ? 0.95
+                    : 0.5,
+              strokeWeight:
+                i === selectedIndex ? 8 : i === currentGreenestIndex ? 7 : 4,
+              zIndex:
+                i === selectedIndex ? 3 : i === currentGreenestIndex ? 2 : 1,
+            });
+          }
+        });
+      }
+
+      function setActiveRouteCard(selectedIndex) {
+        const optionEls = routesListEl.querySelectorAll(".route-option");
+        optionEls.forEach((el) => {
+          const routeIndex = Number(el.dataset.routeIndex);
+          const isSelected = routeIndex === selectedIndex;
+          el.classList.toggle("route-option-active", isSelected);
+          el.setAttribute("aria-pressed", String(isSelected));
+        });
+      }
+
+      function selectRoute(selectedIndex) {
+        const route = currentRoutes[selectedIndex];
+        if (!route) return;
+
+        highlightRoutePolylines(selectedIndex);
+        setActiveRouteCard(selectedIndex);
+
+        const routeMiles = route.distance_km * 0.621371;
+        const routeCo2Kg = route.co2_emissions_g / 1000;
+        document.getElementById("distanceText").textContent =
+          `Distance: ${routeMiles.toFixed(2)} miles (${route.distance_km.toFixed(2)} km)`;
+        document.getElementById("durationText").textContent =
+          `Time: ${route.duration}`;
+        document.getElementById("co2Text").textContent =
+          `CO₂ Emissions: ${routeCo2Kg.toFixed(2)} kg`;
+      }
+
+      function renderRouteCards(routes, greenestIndex) {
+        currentRoutes = routes;
+        currentGreenestIndex = greenestIndex;
+
+        if (!Array.isArray(routes) || routes.length === 0) {
+          routesListEl.innerHTML = "";
+          return;
+        }
+
+        const cards = routes
+          .map((route, idx) => {
+            const isGreenest = route.index === greenestIndex;
+            const routeMiles = route.distance_km * 0.621371;
+            const routeCo2Kg = route.co2_emissions_g / 1000;
+            const extraKg = route.extra_emissions_g / 1000;
+            const savingsText = isGreenest
+              ? "Lowest emissions"
+              : `Save ${extraKg.toFixed(2)} kg CO₂ by choosing route ${greenestIndex + 1}`;
+
+            return `
+              <button
+                class="route-option ${isGreenest ? "route-option-greenest" : ""}"
+                type="button"
+                data-route-index="${idx}"
+                aria-pressed="false"
+              >
+                <div class="route-option-header">
+                  <span class="route-title">Route ${idx + 1}</span>
+                  ${isGreenest ? '<span class="route-pill">Greenest</span>' : ""}
+                </div>
+                <p class="route-main-metric">${routeCo2Kg.toFixed(2)} kg CO₂</p>
+                <p class="route-meta">${routeMiles.toFixed(2)} miles (${route.distance_km.toFixed(2)} km) • ${route.duration}</p>
+                <p class="route-savings">${savingsText}</p>
+              </button>
+            `;
+          })
+          .join("");
+
+        routesListEl.innerHTML = `<h4 class="routes-heading">Route Options</h4><div class="routes-grid">${cards}</div>`;
+      }
+
       profileToggleBtn.addEventListener("click", function (event) {
         event.stopPropagation();
         setProfileMenuState(profileMenu.hidden);
@@ -375,6 +568,14 @@
 
       historySortEl.addEventListener("change", function () {
         renderHistoryPanel();
+      });
+
+      routesListEl.addEventListener("click", function (event) {
+        const routeCard = event.target.closest(".route-option");
+        if (!routeCard) return;
+        const routeIndex = Number(routeCard.dataset.routeIndex);
+        if (!Number.isFinite(routeIndex)) return;
+        selectRoute(routeIndex);
       });
 
       document.addEventListener("click", function () {
@@ -424,17 +625,29 @@
               };
               initMapWithLocation(userLocation);
               setupAutocomplete();
+              setUiStatus(
+                "Location detected. Search a destination to compare route emissions.",
+                "success",
+              );
             },
             (error) => {
               console.warn("Geolocation failed:", error);
               initMapWithLocation(fallback);
               setupAutocomplete();
+              setUiStatus(
+                "Using default map location. You can still search any destination.",
+                "info",
+              );
             },
           );
         } else {
           console.warn("Geolocation not supported");
           initMapWithLocation(fallback);
           setupAutocomplete();
+          setUiStatus(
+            "Geolocation not supported. Using default map location.",
+            "info",
+          );
         }
       }
 
@@ -544,10 +757,10 @@
       function setProfileStatus(message, type) {
         const el = document.getElementById("profileStatus");
         el.textContent = message;
-        el.style.color = type === "success" ? "green" : "red";
+        el.style.color = type === "success" ? "#1d7e35" : "#a33232";
         setTimeout(() => {
           el.textContent = "";
-        }, 5000);
+        }, 8000);
       }
 
       // Save profile to localStorage
@@ -577,9 +790,18 @@
         try {
           localStorage.setItem("userCarProfile", JSON.stringify(car));
           setProfileStatus("Profile saved!", "success");
+          updateActiveVehicleBadge(car);
+          setUiStatus(
+            "Vehicle profile saved. You can now get route emissions.",
+            "success",
+          );
         } catch (e) {
           setProfileStatus(
             "Could not save profile. Storage may be unavailable.",
+            "error",
+          );
+          setUiStatus(
+            "Could not save profile. Check browser storage settings and try again.",
             "error",
           );
         }
@@ -614,9 +836,11 @@
             .dispatchEvent(new Event("change"));
           // Set FuelType
           document.getElementById("FuelType").value = car.FuelType;
+          updateActiveVehicleBadge(car);
         } catch (e) {
           console.warn("Could not load car profile:", e);
           localStorage.removeItem("userCarProfile");
+          updateActiveVehicleBadge(null);
         }
       }
 
@@ -625,15 +849,20 @@
         .getElementById("searchForm")
         .addEventListener("submit", async function (e) {
           e.preventDefault();
+          clearUiStatus();
 
-          const query = document.getElementById("searchInput").value;
+          const query = document.getElementById("searchInput").value.trim();
 
           if (!query) {
-            alert("Please enter a location");
+            setUiStatus(
+              "Please enter a destination before searching.",
+              "error",
+            );
             return;
           }
 
           try {
+            setSearchLoading(true);
             const response = await fetch("/search-location", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -643,7 +872,7 @@
             const data = await response.json();
 
             if (data.error) {
-              alert(data.error);
+              setUiStatus(data.error, "error");
               return;
             }
 
@@ -674,6 +903,10 @@
               if (!carEmissions) {
                 document.getElementById("co2Text").textContent =
                   `CO₂ Emissions: Select a vehicle first`;
+                setUiStatus(
+                  "Select and save a vehicle profile first.",
+                  "error",
+                );
                 return;
               }
 
@@ -710,25 +943,7 @@
 
                 // Show all route options
                 const routes = greenestData.routes;
-                const routesList = document.getElementById("routesList");
-                routesList.innerHTML = `<h4>Route Options</h4>`;
-                routes.forEach((route, idx) => {
-                  const isGreenest = route.index === greenest.index;
-                  const routeMiles = route.distance_km * 0.621371;
-                  const routeCo2Kg = route.co2_emissions_g / 1000;
-                  const extraKg = route.extra_emissions_g / 1000;
-                  const savingMsg = isGreenest
-                    ? `<span style='color:green;font-weight:bold'>(Greenest Route)</span>`
-                    : `<span style='color:#888'>+${extraKg.toFixed(2)} kg CO₂</span> <span style='color:#009900'>(Save ${extraKg.toFixed(2)} kg by choosing greenest)</span>`;
-                  const btnStyle = isGreenest
-                    ? "background:#eaffea;border:2px solid #00b300;"
-                    : "background:#f9f9f9;border:1px solid #ccc;";
-                  routesList.innerHTML += `
-                    <div style="margin:10px 0;padding:10px;${btnStyle}border-radius:8px;cursor:pointer;" onclick="window.showRouteOnMap(${idx})">
-                      <b>Route ${idx + 1}</b>: ${routeMiles.toFixed(2)} miles, ${route.duration}, <b>${routeCo2Kg.toFixed(2)} kg CO₂</b> ${savingMsg}
-                    </div>
-                  `;
-                });
+                renderRouteCards(routes, greenest.index);
 
                 // Draw all routes on the map, highlight greenest
                 if (window.routePolylines) {
@@ -752,51 +967,26 @@
                   }
                 });
 
-                // Click handler: update summary and highlight selected route
-                window.showRouteOnMap = function (idx) {
-                  routes.forEach((route, i) => {
-                    if (window.routePolylines && window.routePolylines[i]) {
-                      window.routePolylines[i].setOptions({
-                        strokeColor:
-                          i === idx
-                            ? "#0077ff"
-                            : i === greenest.index
-                              ? "#00b300"
-                              : "#888",
-                        strokeOpacity:
-                          i === idx ? 1.0 : i === greenest.index ? 1.0 : 0.5,
-                        strokeWeight:
-                          i === idx ? 8 : i === greenest.index ? 7 : 4,
-                        zIndex: i === idx ? 3 : i === greenest.index ? 2 : 1,
-                      });
-                    }
-                  });
-                  const route = routes[idx];
-                  const routeMiles = route.distance_km * 0.621371;
-                  const routeCo2Kg = route.co2_emissions_g / 1000;
-                  document.getElementById("distanceText").textContent =
-                    `Distance: ${routeMiles.toFixed(2)} miles (${route.distance_km.toFixed(2)} km)`;
-                  document.getElementById("durationText").textContent =
-                    `Time: ${route.duration}`;
-                  document.getElementById("co2Text").textContent =
-                    `CO₂ Emissions: ${routeCo2Kg.toFixed(2)} kg`;
-                };
                 // Highlight greenest route by default
-                window.showRouteOnMap(greenest.index);
+                selectRoute(greenest.index);
+                setUiStatus(
+                  "Routes ready. Compare options and pick the one you prefer.",
+                  "success",
+                );
               } else {
-                document.getElementById("distanceText").textContent =
-                  `Distance: --`;
-                document.getElementById("durationText").textContent =
-                  `Time: --`;
-                document.getElementById("co2Text").textContent =
-                  `CO₂ Emissions: --`;
+                resetTripDisplay();
                 document.getElementById("routesList").innerHTML = "";
-                alert(greenestData.error);
+                setUiStatus(greenestData.error, "error");
               }
             }
           } catch (err) {
             console.error(err);
-            alert("Error searching location");
+            setUiStatus(
+              "Could not search location or route. Please try again.",
+              "error",
+            );
+          } finally {
+            setSearchLoading(false);
           }
         });
 
@@ -917,6 +1107,7 @@
         initMap();
         await loadCars();
         loadProfile();
+        updateActiveVehicleBadge();
         renderHistoryPanel();
       };
     </script>

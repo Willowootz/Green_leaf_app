@@ -4,7 +4,7 @@ import toml
 from flask_cors import CORS
 import json
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="frontend")
 CORS(app)
 
 # Load Google Maps API key from secrets.toml
