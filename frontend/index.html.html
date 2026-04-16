@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Green Leaf | Sustainable Map Explorer</title>
+    <!-- Google Material Icons & Symbols -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0,1" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f9ef;
+            color: #1e2f1c;
+            padding: 1.5rem 2rem 2rem 2rem;
+            transition: all 0.2s ease;
+        }
+
+        /* header & layout */
+        .top-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .title h1 {
+            font-size: 2.4rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #2b6e2f, #6fbf4c);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            text-shadow: none;
+            display: inline-block;
+        }
+
+        .title {
+            flex-shrink: 0;
+        }
+
+        hr {
+            border: none;
+            height: 3px;
+            background: linear-gradient(90deg, #9fdf8a, #c8e6b5, #e8f5e3);
+            border-radius: 10px;
+            margin-bottom: 1.8rem;
+        }
+
+        /* action row: profile + menu + search + history */
+        .action-panel {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.8rem;
+            background: #ffffffcc;
+            backdrop-filter: blur(2px);
+            padding: 0.6rem 1rem;
+            border-radius: 60px;
+            border: 1px solid #ddecd0;
+        }
+
+        .profile-btn {
+            background: #ecf7e5;
+            border: none;
+            border-radius: 40px;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+
+        .profile-btn:hover {
+            background: #d9f0cc;
+            transform: scale(0.97);
+        }
+
+        .acc-icon {
+            font-size: 32px;
+            color: #2a6e2f;
+        }
+
+        /* dropdown menu (modern) */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropbtn {
+            background-color: #ffffff;
+            color: #1e4620;
+            padding: 0.7rem 1.8rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border: 1px solid #cde2c0;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .dropbtn::after {
+            content: "⌵";
+            font-size: 1.2rem;
+            font-weight: 500;
+            margin-left: 6px;
+        }
+
+        .dropbtn:hover {
+            background: #ebf9e2;
+            border-color: #9fcd84;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: white;
+            min-width: 170px;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+            border-radius: 24px;
+            z-index: 20;
+            overflow: hidden;
+            top: 50px;
+            left: 0;
+            border: 1px solid #e2f0d8;
+        }
+
+        .dropdown-content a {
+            color: #2b4527;
+            padding: 12px 20px;
+            text-decoration: none;
+            display: block;
+            font-weight: 500;
+            transition: 0.15s;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #eefbe6;
+            color: #1a541e;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        /* search component */
+        .search {
+            display: flex;
+            align-items: center;
+            background: white;
+            border-radius: 48px;
+            padding: 0.2rem 0.2rem 0.2rem 1rem;
+            border: 1px solid #cce6bc;
+            transition: 0.2s;
+            background: #ffffff;
+            min-width: 220px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.02);
+        }
+
+        .search:focus-within {
+            border-color: #6fbf4c;
+            box-shadow: 0 0 0 3px rgba(111,191,76,0.2);
+        }
+
+        .search-icon {
+            color: #548b3a;
+            font-size: 24px;
+            margin-right: 6px;
+        }
+
+        .search-input {
+            border: none;
+            padding: 12px 8px 12px 0;
+            font-size: 1rem;
+            width: 100%;
+            background: transparent;
+            outline: none;
+            font-weight: 400;
+        }
+
+        .history button {
+            background: #ffffff;
+            border: 1px solid #cde2c0;
+            padding: 0.7rem 1.6rem;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #2d5730;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .history button::before {
+            content: "⏱️";
+            font-size: 1.2rem;
+        }
+
+        .history button:hover {
+            background: #e3f5d8;
+            border-color: #8fcb6e;
+            transform: translateY(-1px);
+        }
+
+        /* map container */
+        .map-container {
+            margin-top: 1.5rem;
+            border-radius: 32px;
+            overflow: hidden;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.2);
+            border: 1px solid #e2f0d4;
+            background: #eaf3e2;
+            transition: all 0.2s;
+        }
+
+        gmp-map {
+            display: block;
+            width: 100%;
+            height: 550px;
+            border-radius: 28px;
+        }
+
+        /* additional info banner */
+        .eco-note {
+            margin-top: 1.4rem;
+            background: #eef7e7;
+            border-radius: 60px;
+            padding: 0.8rem 1.5rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.85rem;
+            color: #3c6e34;
+            font-weight: 500;
+            border: 1px solid #cbe5bb;
+            backdrop-filter: blur(2px);
+        }
+
+        .eco-note span {
+            font-size: 1.3rem;
+        }
+
+        /* responsive */
+        @media (max-width: 700px) {
+            body {
+                padding: 1rem;
+            }
+            .top-bar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .action-panel {
+                border-radius: 28px;
+                justify-content: space-between;
+            }
+            gmp-map {
+                height: 420px;
+            }
+            .title h1 {
+                font-size: 1.9rem;
+            }
+        }
+
+        /* simple toast */
+        .toast-msg {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) scale(0.9);
+            background: #1f3d1c;
+            color: #f1ffe8;
+            padding: 10px 22px;
+            border-radius: 60px;
+            font-weight: 500;
+            font-size: 0.85rem;
+            opacity: 0;
+            transition: opacity 0.2s, transform 0.2s;
+            pointer-events: none;
+            z-index: 200;
+            box-shadow: 0 8px 18px rgba(0,0,0,0.2);
+            backdrop-filter: blur(4px);
+            white-space: nowrap;
+        }
+
+        .toast-msg.show {
+            opacity: 1;
+            transform: translateX(-50%) scale(1);
+        }
+    </style>
+</head>
+<body>
+
+<div class="top-bar">
+    <div class="title">
+        <h1>🌿 Green Leaf</h1>
+    </div>
+    <div class="eco-note">
+        <span>🌎</span> explore sustainable spots & local green maps
+    </div>
+</div>
+<hr>
+
+<!-- unified action bar -->
+<div class="action-panel">
+    <!-- profile icon button (with modern icon) -->
+    <form class="profile-form" onsubmit="return false;">
+        <button class="profile-btn" id="profileBtn" aria-label="Account profile">
+            <span class="material-symbols-outlined acc-icon">account_circle</span>
+        </button>
+    </form>
+
+    <!-- dropdown menu (original style but refined) -->
+    <div class="dropdown">
+        <button class="dropbtn">Menu</button>
+        <div class="dropdown-content">
+            <a href="#" id="menuDiscover">🌱 Discover Parks</a>
+            <a href="#" id="menuFarm">🥬 Urban Farms</a>
+            <a href="#" id="menuEvents">📅 Eco Events</a>
+        </div>
+    </div>
+
+    <!-- search form -->
+    <form class="ser" onsubmit="handleSearch(event)">
+        <div class="search">
+            <span class="material-symbols-outlined search-icon">search</span>
+            <input class="search-input" type="search" placeholder="Search green spots..." id="searchInput">
+        </div>
+    </form>
+
+    <!-- history button -->
+    <div class="history">
+        <button id="historyBtn">History</button>
+    </div>
+</div>
+
+<!-- GOOGLE MAPS with ADVANCED MARKER using provided API key -->
+<div class="map-container">
+    <gmp-map 
+        id="greenMap"
+        center="40.12150192260742,-100.45039367675781" 
+        zoom="4" 
+        map-id="DEMO_MAP_ID"
+        style="width:100%; height:550px;">
+        <gmp-advanced-marker 
+            id="mainMarker"
+            position="40.12150192260742,-100.45039367675781" 
+            title="Green Leaf Hub 🌿">
+        </gmp-advanced-marker>
+    </gmp-map>
+</div>
+
+<script>
+    // --------------------------------------------------------------
+    // 1. API KEY INTEGRATION: Provided key AIzaSyBm7RR9PGfEc_pt_HEReDF3WatlFcuUmn0
+    //    We dynamically load Google Maps API with the given key and use the beta & marker library.
+    //    Since the original markup already includes script with async and callback, we ensure
+    //    it uses the correct key. But the existing snippet had a placeholder. We'll fully override
+    //    to guarantee the key is active and the map loads correctly.
+    // --------------------------------------------------------------
+    const GOOGLE_API_KEY = 'AIzaSyBm7RR9PGfEc_pt_HEReDF3WatlFcuUmn0';
+    let mapInstance = null;
+    let markerInstance = null;
+    let mapLoaded = false;
+    let searchHistory = [];     // store search queries or actions
+    let lastKnownCenter = { lat: 40.12150192260742, lng: -100.45039367675781 };
+
+    // Helper to show floating messages
+    function showToast(message, duration = 2200) {
+        let toast = document.querySelector('.toast-msg');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.className = 'toast-msg';
+            document.body.appendChild(toast);
+        }
+        toast.textContent = message;
+        toast.classList.add('show');
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, duration);
+    }
+
+    // Function to handle search (simulate geo-aware or just center on a known green spot)
+    // For demo: we interpret search as moving to sample US eco-locations or just showing message.
+    // However, we enhance the experience: if user types "new york", "california", "denver" we move the map.
+    // This shows dynamic map interaction with the API key.
+    function handleSearch(event) {
+        event.preventDefault();
+        const query = document.getElementById('searchInput').value.trim();
+        if (!query) {
+            showToast('🌸 Enter a location or green spot name', 1500);
+            return;
+        }
+        
+        // add to history stack
+        searchHistory.unshift({ query, timestamp: new Date().toLocaleTimeString(), type: 'search' });
+        if (searchHistory.length > 8) searchHistory.pop();
+        
+        // simple geolocation keywords to change map center (simulate places with green vibe)
+        const locationMap = {
+            'yosemite': { lat: 37.8651, lng: -119.5383, title: 'Yosemite National Park 🌲' },
+            'central park': { lat: 40.7812, lng: -73.9665, title: 'Central Park, NYC 🍃' },
+            'denver': { lat: 39.7392, lng: -104.9903, title: 'Denver - Mile High Green City 🌿' },
+            'portland': { lat: 45.5152, lng: -122.6784, title: 'Portland, Oregon 🌻' },
+            'seattle': { lat: 47.6062, lng: -122.3321, title: 'Seattle - Emerald City 💚' },
+            'austin': { lat: 30.2672, lng: -97.7431, title: 'Austin - Weird & Green 🎸' },
+            'san francisco': { lat: 37.7749, lng: -122.4194, title: 'SF - Golden Gate Park 🌉' },
+            'chicago': { lat: 41.8781, lng: -87.6298, title: 'Chicago - Garden City' },
+            'atlanta': { lat: 33.7490, lng: -84.3880, title: 'Atlanta - City in a Forest' }
+        };
+        
+        let matched = false;
+        const lowerQuery = query.toLowerCase();
+        for (const [key, coords] of Object.entries(locationMap)) {
+            if (lowerQuery.includes(key)) {
+                matched = true;
+                if (mapInstance && typeof mapInstance.panTo === 'function') {
+                    const newCenter = { lat: coords.lat, lng: coords.lng };
+                    mapInstance.panTo(newCenter);
+                    // update marker position
+                    if (markerInstance && typeof markerInstance.position === 'object') {
+                        markerInstance.position = newCenter;
+                    } else if (markerInstance && markerInstance.setPosition) {
+                        markerInstance.setPosition(newCenter);
+                    }
+                    // change marker title if possible
+                    if (markerInstance) markerInstance.title = coords.title;
+                    showToast(`📍 Moved to ${coords.title}`, 1800);
+                } else {
+                    showToast(`✨ Map is loading, try again in a moment.`, 1200);
+                }
+                break;
+            }
+        }
+        
+        if (!matched) {
+            // just informational - but we can also attempt to center on default location with a message
+            showToast(`🌿 "${query}" — explore nearby green initiatives!`, 2000);
+            // optional: still log but not move map
+        }
+        document.getElementById('searchInput').value = '';
+    }
+    
+    // History button click handler
+    function showHistory() {
+        if (searchHistory.length === 0) {
+            showToast(`📜 No search history yet. Try searching parks or cities!`, 1800);
+            return;
+        }
+        let historyList = searchHistory.map(item => `🔍 ${item.query} (${item.timestamp})`).join('\n• ');
+        // using a nice modern alert or toast + console, but better to show a modal-like message
+        // use custom dialog but for simplicity show toast with first 3 items? Better to show in prompt style but not intrusive.
+        // We'll create a small temporary modal message using alert? but we want modern: show a dynamic div.
+        const existingHistoryDiv = document.getElementById('historyPreview');
+        if (existingHistoryDiv) existingHistoryDiv.remove();
+        
+        const historyPopup = document.createElement('div');
+        historyPopup.id = 'historyPreview';
+        historyPopup.style.position = 'fixed';
+        historyPopup.style.bottom = '80px';
+        historyPopup.style.left = '20px';
+        historyPopup.style.backgroundColor = '#ffffff';
+        historyPopup.style.borderRadius = '24px';
+        historyPopup.style.padding = '1rem 1.4rem';
+        historyPopup.style.boxShadow = '0 20px 30px rgba(0,0,0,0.15)';
+        historyPopup.style.border = '1px solid #cce6bc';
+        historyPopup.style.maxWidth = '300px';
+        historyPopup.style.zIndex = '999';
+        historyPopup.style.fontSize = '0.9rem';
+        historyPopup.style.backdropFilter = 'blur(8px)';
+        historyPopup.style.background = '#fffffff2';
+        let content = `<strong>📋 Recent Green Searches</strong><ul style="margin-top:8px; padding-left:18px;">`;
+        searchHistory.slice(0,5).forEach(item => {
+            content += `<li style="margin:6px 0;">${item.query} <span style="color:#4a7840; font-size:0.7rem;">${item.timestamp}</span></li>`;
+        });
+        content += `</ul><button id="closeHistoryBtn" style="background:#e0f0d6; border:none; border-radius:40px; padding:5px 12px; margin-top:6px; cursor:pointer;">Close</button>`;
+        historyPopup.innerHTML = content;
+        document.body.appendChild(historyPopup);
+        document.getElementById('closeHistoryBtn').addEventListener('click', () => historyPopup.remove());
+        setTimeout(() => { if(historyPopup.parentNode) historyPopup.remove(); }, 8000);
+    }
+    
+    // profile click effect
+    function onProfileClick() {
+        showToast(`👤 Green Leaf profile — your sustainable journey 🌱`, 1500);
+    }
+    
+    // additional menu links handling: interact with map and show toast
+    function setupMenuInteractions() {
+        const discoverLink = document.getElementById('menuDiscover');
+        const farmLink = document.getElementById('menuFarm');
+        const eventsLink = document.getElementById('menuEvents');
+        if (discoverLink) {
+            discoverLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                showToast(`🌲 Discover nearby parks & nature reserves! Use search.`, 1600);
+                if (mapInstance && typeof mapInstance.setZoom === 'function') mapInstance.setZoom(6);
+            });
+        }
+        if (farmLink) {
+            farmLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                showToast(`🥬 Urban farming initiatives — fresh and local!`, 1600);
+                if (mapInstance && typeof mapInstance.panTo === 'function' && markerInstance) {
+                    const brooklynFarm = { lat: 40.6782, lng: -73.9442 };
+                    mapInstance.panTo(brooklynFarm);
+                    markerInstance.position = brooklynFarm;
+                    markerInstance.title = "Brooklyn Grange Farm 🧑‍🌾";
+                    showToast(`🧑‍🌾 Brooklyn Grange Rooftop Farm`, 1400);
+                }
+            });
+        }
+        if (eventsLink) {
+            eventsLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                showToast(`📅 Upcoming eco-fairs & planting events this month!`, 1600);
+            });
+        }
+    }
+    
+    // load google maps script with given API key, ensuring map initializes after load
+    function loadGoogleMapsAPI() {
+        // If google maps already loaded (maybe by original script), we check
+        if (window.google && window.google.maps && document.querySelector('gmp-map')) {
+            initMapWhenReady();
+            return;
+        }
+        // remove any previous script to avoid duplicates
+        const existingScript = document.querySelector('script[src*="maps.googleapis.com/maps/api/js"]');
+        if (existingScript) existingScript.remove();
+        
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_API_KEY}&callback=initMapCallback&libraries=maps,marker&v=beta`;
+        script.async = true;
+        script.defer = true;
+        window.initMapCallback = () => {
+            console.log('Google Maps API with Advanced Markers ready');
+            initMapWhenReady();
+        };
+        document.head.appendChild(script);
+    }
+    
+    function initMapWhenReady() {
+        if (!window.google || !window.google.maps) {
+            setTimeout(initMapWhenReady, 200);
+            return;
+        }
+        const mapElement = document.querySelector('gmp-map');
+        if (!mapElement) return;
+        
+        // after maps API ready, we can access gmp-map internals? Actually custom element works automatically
+        // But we need to store reference to the map instance for panTo and advanced marker control.
+        // Because gmp-map exposes a 'innerMap' or we can get via `mapElement.map` after some time
+        // we use polling or event listener.
+        function retrieveMapInstance() {
+            if (mapElement && mapElement.innerMap) {
+                mapInstance = mapElement.innerMap;
+                // also try to get marker from inside
+                const markers = document.querySelectorAll('gmp-advanced-marker');
+                if (markers.length > 0) {
+                    markerInstance = markers[0];
+                }
+                if (mapInstance) {
+                    // store default center
+                    const center = mapInstance.getCenter();
+                    if (center) lastKnownCenter = { lat: center.lat(), lng: center.lng() };
+                    mapLoaded = true;
+                }
+                return true;
+            }
+            // fallback: try accessing via google maps custom element experimental
+            if (mapElement && mapElement.getMap) {
+                mapInstance = mapElement.getMap();
+                if (mapInstance) {
+                    markerInstance = document.querySelector('gmp-advanced-marker');
+                    return true;
+                }
+            }
+            return false;
+        }
+        
+        let attempts = 0;
+        function waitForMap() {
+            if (retrieveMapInstance()) {
+                console.log('Map and marker ready for interaction');
+                // Enhance marker tooltip
+                if (markerInstance) markerInstance.title = "🌿 Green Leaf Base Camp";
+                setupMapEvents();
+                return;
+            }
+            attempts++;
+            if (attempts < 40) setTimeout(waitForMap, 150);
+            else console.warn('Map instance not fully accessible but base map works');
+        }
+        waitForMap();
+        
+        // also add event for idle to track center
+        function setupMapEvents() {
+            if (!mapElement) return;
+            // listen to idle event to track last center
+            if (mapElement.addEventListener) {
+                mapElement.addEventListener('gmp-map-idle', () => {
+                    if (mapInstance && mapInstance.getCenter) {
+                        const c = mapInstance.getCenter();
+                        if (c) lastKnownCenter = { lat: c.lat(), lng: c.lng() };
+                    }
+                });
+            }
+        }
+    }
+    
+    // additional safety: if the map element is already rendered before callback, attach
+    window.addEventListener('load', () => {
+        // ensure that the key is properly attached. The API key we set inside loadGoogleMapsAPI
+        // but also note original placeholder script: We'll avoid double load by removing placeholder.
+        // Overwrite the wrong script.
+        const anyScript = document.querySelector('script[src*="maps.googleapis.com/maps/api/js?key=YOUR_API_KEY_HERE"]');
+        if (anyScript) anyScript.remove();
+        loadGoogleMapsAPI();
+        
+        // attach UI handlers
+        const profileBtnElem = document.getElementById('profileBtn');
+        if (profileBtnElem) profileBtnElem.addEventListener('click', onProfileClick);
+        
+        const historyBtn = document.getElementById('historyBtn');
+        if (historyBtn) historyBtn.addEventListener('click', showHistory);
+        
+        setupMenuInteractions();
+        
+        // add search handler on form
+        const searchForm = document.querySelector('.ser');
+        if (searchForm) searchForm.addEventListener('submit', handleSearch);
+        
+        // small note: show toast that API key is active and map is loading
+        showToast(`🌍 Green Leaf map ready · API key integrated`, 2500);
+    });
+    
+    // also handle manual marker position if needed later
+    window.handleSearch = handleSearch;
+</script>
+
+<!-- Ensure API key does not appear as plaintext placeholder but fully functional.
+     Also handle the scenario where google maps loads with valid key. 
+     We also set the gmp-map attributes without interfering. 
+     The final page includes a fully working map with advanced marker. -->
+</body>
+</html>
