@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Green Leaf | Emissions Calculator</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0,1" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: #f5f9ef;
+            color: #1e2f1c;
+            padding: 1.5rem 2rem;
+        }
+
+        .top-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.2rem; }
+        .title h1 {
+            font-size: 2.4rem; font-weight: 700; letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #2b6e2f, #6fbf4c);
+            background-clip: text; -webkit-background-clip: text; color: transparent;
+        }
+
+        hr { border: none; height: 3px; background: linear-gradient(90deg, #9fdf8a, #c8e6b5, #e8f5e3); border-radius: 10px; margin-bottom: 1.8rem; }
+
+        /* calculator */
+        .calc-container {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 32px;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2f0d4;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        h2 { margin-bottom: 1.5rem; color: #2a6e2f; font-weight: 700; }
+
+        .input-group { margin-bottom: 1.2rem; }
+        
+        input {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            border-radius: 15px;
+            border: 1px solid #cce6bc;
+            font-size: 1rem;
+            outline: none;
+            transition: 0.2s;
+            margin-top: 0.5rem;
+        }
+
+        input:focus { border-color: #6fbf4c; box-shadow: 0 0 0 3px rgba(111,191,76,0.1); }
+
+        button.calc-btn {
+            width: 100%;
+            background: #2b6e2f;
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 15px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 1rem;
+        }
+
+        button.calc-btn:hover { background: #1f5022; transform: translateY(-1px); }
+
+        #output {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            border-radius: 20px;
+            background: #f9fdf6;
+            border: 1px dashed #cde2c0;
+            min-height: 60px;
+            display: none;
+            line-height: 1.6;
+        }
+
+        .action-panel {
+            display: flex; flex-wrap: wrap; align-items: center; gap: 1rem;
+            margin-bottom: 1.8rem; background: #ffffffcc; padding: 0.6rem 1rem;
+            border-radius: 60px; border: 1px solid #ddecd0;
+        }
+
+        .history-btn {
+            background: #ffffff; border: 1px solid #cde2c0; padding: 0.7rem 1.6rem;
+            border-radius: 40px; font-weight: 600; color: #2d5730; cursor: pointer;
+        }
+
+        .toast-msg {
+            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) scale(0.9);
+            background: #1f3d1c; color: #f1ffe8; padding: 10px 22px; border-radius: 60px;
+            opacity: 0; transition: 0.2s; pointer-events: none; z-index: 200;
+        }
+        .toast-msg.show { opacity: 1; transform: translateX(-50%) scale(1); }
+    </style>
+</head>
+<body>
+
+<div class="top-bar">
+    <div class="title">
+        <h1>🌿 Green Leaf</h1>
+    </div>
+    <div class="action-panel">
+        <button class="history-btn" onclick="showHistory()">⏱️ Calculation History</button>
+    </div>
+</div>
+<hr>
+
+<main class="calc-container">
+    <h2>CO2 Emissions Calculator</h2>
+    
+    <div class="input-group">
+        <label for="car_query">Vehicle Details</label>
+        <input type="text" id="car_query" placeholder="e.g. Acura ILX">
+    </div>
+
+    <div class="input-group">
+        <label for="distance">Trip Distance (miles)</label>
+        <input type="number" id="distance" placeholder="Enter distance (MI)">
+    </div>
+
+    <button class="calc-btn" onclick="calculate()">Predict Emissions</button>
+    
+    <div id="output"></div>
+</main>
+
+<div class="toast-msg" id="toast"></div>
+
+<script>
+    let calculationHistory = [];
+
+    function showToast(message) {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    async function calculate() {
+        const car_query = document.getElementById('car_query').value;
+        const distance = document.getElementById('distance').value;
+        const output = document.getElementById('output');
+
+        if (!car_query || !distance) {
+            showToast("Fill both fields");
+            return;
+        }
+
+        showToast("Analyzing emissions...");
+
+        try {
+            const response = await fetch('http://127.0.0.1:5000/predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ car_query, distance })
+            });
+
+            const data = await response.json();
+            output.style.display = "block";
+
+            if(data.success) {
+                output.innerHTML = `
+                    <strong style="color: #2b6e2f;">Analysis Complete</strong><br>
+                    Vehicle: <b>${data.car_name}</b><br>
+                    Total CO2: <span style="font-size: 1.2rem; font-weight: 700;">${data.emissions} kg</span>
+                `;
+                output.style.borderColor = "#cde2c0";
+                
+                /* hist */
+                calculationHistory.unshift({
+                    car: data.car_name,
+                    emissions: data.emissions,
+                    time: new Date().toLocaleTimeString()
+                });
+            } else {
+                output.innerHTML = `<span style="color: #d32f2f;">${data.error}</span>`;
+                output.style.borderColor = "#f8d7da";
+            }
+        } catch (err) {
+            showToast("Connection Error (Flask Server - tthis is temp for testing)");
+            console.error(err);
+        }
+    }
+
+    function showHistory() {
+        if (calculationHistory.length === 0) {
+            showToast("📜 No history yet.");
+            return;
+        }
+        const recent = calculationHistory[0];
+        alert(`Last Calculation:\nVehicle: ${recent.car}\nEmissions: ${recent.emissions} kg\nTime: ${recent.time}`);
+    }
+</script>
+
+</body>
+</html>
