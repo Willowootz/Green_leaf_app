@@ -163,6 +163,8 @@
             background: #ffffff;
             min-width: 220px;
             box-shadow: 0 1px 4px rgba(0,0,0,0.02);
+            gap: 0.45rem;
+            flex-wrap: wrap;
         }
 
         .search:focus-within {
@@ -180,10 +182,19 @@
             border: none;
             padding: 12px 8px 12px 0;
             font-size: 1rem;
-            width: 100%;
+            flex: 1 1 220px;
+            min-width: 0;
             background: transparent;
             outline: none;
             font-weight: 400;
+        }
+
+        .search #searchBtn {
+            padding: 0.72rem 1rem;
+            min-height: 40px;
+            border-radius: 16px;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .history button {
@@ -262,6 +273,13 @@
             .action-panel {
                 border-radius: 28px;
                 justify-content: space-between;
+            }
+            .search {
+                width: 100%;
+                min-width: 0;
+            }
+            .search #searchBtn {
+                width: 100%;
             }
             gmp-map {
                 height: 420px;
