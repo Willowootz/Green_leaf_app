@@ -475,39 +475,6 @@
         font-size: 0.92rem;
       }
 
-      .emissions-panel {
-        margin-top: 1.4rem;
-        background: linear-gradient(
-          180deg,
-          rgba(255, 255, 255, 0.98),
-          rgba(247, 251, 241, 0.98)
-        );
-        border-radius: 28px;
-        border: 1px solid #d9e9ce;
-        box-shadow: 0 18px 36px rgba(31, 61, 28, 0.08);
-        padding: 1.2rem;
-      }
-
-      .emissions-panel h2 {
-        font-size: 1.2rem;
-        font-weight: 700;
-        color: #1f3d1c;
-        margin-bottom: 0.35rem;
-      }
-
-      .emissions-panel p {
-        color: #5b7154;
-        font-size: 0.92rem;
-        line-height: 1.45;
-      }
-
-      .emissions-form {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 1rem;
-        margin-top: 1rem;
-      }
-
       .field {
         display: flex;
         flex-direction: column;
@@ -643,9 +610,6 @@
         .trip-metrics {
           grid-template-columns: 1fr;
         }
-        .emissions-form {
-          grid-template-columns: 1fr;
-        }
 
         .span-2 {
           grid-column: auto;
@@ -742,11 +706,11 @@
     </div>
 
     <section class="planner-grid" aria-label="Trip planner and vehicle profile">
-      <article class="planner-card">
+      <article class="planner-card profile-menu" id="profileMenu" hidden>
         <h2>Vehicle Profile</h2>
         <p>
-          Pick a car from the dataset so route emissions and trip estimates use
-          the same vehicle profile.
+          Pick a car from the dataset so route emissions use the same vehicle
+          profile.
         </p>
         <div class="planner-controls" id="carSelector">
           <div class="field-group">
@@ -819,36 +783,6 @@
       aria-label="Route options"
     ></section>
 
-    <section class="emissions-panel" aria-labelledby="emissionsTitle">
-      <h2 id="emissionsTitle">Trip emissions estimator</h2>
-      <p>
-        Use the saved vehicle profile and a trip distance to estimate CO2 from
-        the Flask backend.
-      </p>
-
-      <form id="emissionsForm" class="emissions-form">
-        <div class="field span-2">
-          <label for="distanceInput">Trip distance (km)</label>
-          <input
-            id="distanceInput"
-            name="distance"
-            type="number"
-            min="0.1"
-            step="0.1"
-            placeholder="25"
-            required
-          />
-        </div>
-        <button class="predict-btn span-2" type="submit">
-          Estimate emissions
-        </button>
-      </form>
-
-      <div id="emissionsResult" class="result-box">
-        Enter a vehicle and trip distance to calculate emissions.
-      </div>
-    </section>
-
     <datalist id="makeOptions"></datalist>
     <datalist id="modelOptions"></datalist>
     <datalist id="fuelOptions"></datalist>
@@ -886,9 +820,9 @@
       }
 
       const profileToggleBtn = document.getElementById("profileBtn");
+      const profileMenu = document.getElementById("profileMenu");
       const historyBtn = document.getElementById("historyBtn");
       const searchForm = document.querySelector(".ser");
-      const emissionsForm = document.getElementById("emissionsForm");
       const locateBtn = document.getElementById("locateBtn");
       const saveProfileBtn = document.getElementById("saveProfileBtn");
       const searchBtn = document.getElementById("searchBtn");
@@ -897,7 +831,6 @@
       const locationBadgeEl = document.getElementById("locationBadge");
       const activeVehicleBadgeEl =
         document.getElementById("activeVehicleBadge");
-      const emissionsResultEl = document.getElementById("emissionsResult");
       const profileStatusEl = document.getElementById("profileStatus");
       const distanceTextEl = document.getElementById("distanceText");
       const durationTextEl = document.getElementById("durationText");
@@ -913,6 +846,17 @@
         toast.textContent = message;
         toast.classList.add("show");
         setTimeout(() => toast.classList.remove("show"), duration);
+      }
+
+      function setProfileMenuState(isOpen) {
+        if (!profileMenu || !profileToggleBtn) return;
+
+        profileMenu.hidden = !isOpen;
+        profileToggleBtn.setAttribute("aria-expanded", String(isOpen));
+        profileToggleBtn.setAttribute(
+          "aria-label",
+          isOpen ? "Close vehicle profile" : "Open vehicle profile",
+        );
       }
 
       function setUiStatus(message, type = "info") {
@@ -933,12 +877,6 @@
         if (locationBadgeEl) {
           locationBadgeEl.textContent = message;
         }
-      }
-
-      function renderEmissionsResult(message, isError = false) {
-        if (!emissionsResultEl) return;
-        emissionsResultEl.classList.toggle("error", isError);
-        emissionsResultEl.innerHTML = message;
       }
 
       function populateSelect(selectEl, values, placeholder) {
@@ -1122,12 +1060,13 @@
         }
         updateActiveVehicleBadge(car);
         setUiStatus("Vehicle profile saved.", "success");
+        setProfileMenuState(false);
         showToast("🌿 Vehicle profile saved", 1500);
       }
 
       function loadProfile() {
         const profile = localStorage.getItem("userCarProfile");
-        if (!profile) return;
+        if (!profile) return false;
 
         try {
           const car = JSON.parse(profile);
@@ -1143,10 +1082,12 @@
           populateFuelTypes();
           document.getElementById("FuelType").value = car.FuelType;
           updateActiveVehicleBadge(car);
+          return true;
         } catch (error) {
           console.warn("Could not load car profile:", error);
           localStorage.removeItem("userCarProfile");
           updateActiveVehicleBadge(null);
+          return false;
         }
       }
 
@@ -1473,49 +1414,6 @@
         }
       }
 
-      async function estimateEmissions(event) {
-        event.preventDefault();
-        const car = getSelectedCar();
-        const distance = Number(document.getElementById("distanceInput").value);
-
-        if (!hasValidCar(car)) {
-          renderEmissionsResult(
-            "Select and save a vehicle profile first.",
-            true,
-          );
-          return;
-        }
-
-        if (!Number.isFinite(distance) || distance <= 0) {
-          renderEmissionsResult("Enter a valid trip distance.", true);
-          return;
-        }
-
-        const predictResponse = await fetch("/predict", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            make: car.Make,
-            model: car.Model,
-            engine_size: car.EngineSize,
-            fuel_type: car.FuelType,
-            distance,
-          }),
-        });
-
-        const data = await predictResponse.json();
-        if (!predictResponse.ok) {
-          renderEmissionsResult(data.error || "Prediction failed", true);
-          return;
-        }
-
-        renderEmissionsResult(`
-          <strong>Estimated trip emissions</strong>
-          ${data.total_emissions_kg} kg CO2 for ${data.distance_km} km
-          <span class="small-muted">${data.co2_per_km_g} g CO2 per km for ${data.make} ${data.model} (${getFuelLabel(data.fuel_type)}, ${data.engine_size}L)</span>
-        `);
-      }
-
       async function fetchGoogleMapsApiKey() {
         if (googleMapsApiKey) {
           return googleMapsApiKey;
@@ -1625,7 +1523,8 @@
         try {
           await loadCars();
           attachCarDropdownHandlers();
-          loadProfile();
+          const hasSavedProfile = loadProfile();
+          setProfileMenuState(!hasSavedProfile);
           updateActiveVehicleBadge();
 
           await resolveInitialLocation();
@@ -1633,7 +1532,7 @@
 
           if (profileToggleBtn) {
             profileToggleBtn.addEventListener("click", () => {
-              showToast("👤 Vehicle profile ready", 1400);
+              setProfileMenuState(profileMenu.hidden);
             });
           }
 
@@ -1653,10 +1552,6 @@
 
           if (searchForm) {
             searchForm.addEventListener("submit", findGreenestRoute);
-          }
-
-          if (emissionsForm) {
-            emissionsForm.addEventListener("submit", estimateEmissions);
           }
 
           document
