@@ -490,6 +490,82 @@
         color: #3b5442;
       }
 
+      .history-panel {
+        margin-top: 1rem;
+      }
+
+      .history-panel-header {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.9rem;
+      }
+
+      .history-panel-header h3 {
+        margin: 0;
+        color: #1f3d1c;
+      }
+
+      .history-panel-header p {
+        margin-top: 0.3rem;
+        color: #5b7154;
+        font-size: 0.92rem;
+      }
+
+      .history-panel-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+      }
+
+      #historyCloseBtn {
+        border: 1px solid #cbe5bb;
+        background: #eef7e7;
+        color: #1f3d1c;
+        min-height: 40px;
+        min-width: 40px;
+        border-radius: 12px;
+        cursor: pointer;
+        font-weight: 700;
+      }
+
+      .history-list {
+        display: grid;
+        gap: 0.8rem;
+      }
+
+      .history-entry {
+        border-radius: 18px;
+        background: #fbfef8;
+        border: 1px solid #d9e9ce;
+        padding: 0.95rem 1rem;
+      }
+
+      .history-entry-header {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.6rem;
+        margin-bottom: 0.45rem;
+      }
+
+      .history-entry-title {
+        font-weight: 700;
+        color: #1f3d1c;
+      }
+
+      .history-entry-meta,
+      .history-entry-vehicle {
+        margin-top: 0.3rem;
+        color: #5b7154;
+        font-size: 0.92rem;
+        line-height: 1.45;
+        overflow-wrap: anywhere;
+      }
+
       .trip-metrics {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -914,6 +990,28 @@
       <div id="profileRecentTrips" class="profile-summary-list"></div>
     </section>
 
+    <section
+      id="historyPanel"
+      class="trip-details-card history-panel"
+      aria-labelledby="historyPanelHeading"
+      hidden
+    >
+      <div class="history-panel-header">
+        <div>
+          <h3 id="historyPanelHeading">History</h3>
+          <p>Saved trip destinations from your Profile log.</p>
+        </div>
+        <div class="history-panel-actions">
+          <span id="historyTripCountBadge" class="route-pill">0 trips</span>
+          <button id="historyCloseBtn" type="button" aria-label="Close history">
+            ✕
+          </button>
+        </div>
+      </div>
+
+      <div id="historyTripList" class="history-list"></div>
+    </section>
+
     <datalist id="makeOptions"></datalist>
     <datalist id="modelOptions"></datalist>
     <datalist id="fuelOptions"></datalist>
@@ -977,6 +1075,12 @@
       const profileSummarySection = document.getElementById(
         "profileSummarySection",
       );
+      const historyPanel = document.getElementById("historyPanel");
+      const historyTripListEl = document.getElementById("historyTripList");
+      const historyTripCountBadgeEl = document.getElementById(
+        "historyTripCountBadge",
+      );
+      const historyCloseBtn = document.getElementById("historyCloseBtn");
       const profileTripCountBadgeEl = document.getElementById(
         "profileTripCountBadge",
       );
@@ -1037,6 +1141,35 @@
         if (locationBadgeEl) {
           locationBadgeEl.textContent = message;
         }
+      }
+
+      function buildTripEntries(trips, emptyLabel) {
+        if (!Array.isArray(trips) || trips.length === 0) {
+          return `
+            <div class="profile-summary-empty">
+              <strong>${escapeHtml(emptyLabel)}</strong>
+              <p>Run a route search and saved destinations will appear here.</p>
+            </div>
+          `;
+        }
+
+        return trips
+          .slice(0, 10)
+          .map(
+            (trip) => `
+              <article class="history-entry">
+                <div class="history-entry-header">
+                  <span class="history-entry-title">${escapeHtml(trip.destination)}</span>
+                  <span class="route-pill">${formatTripDate(trip.timestamp)}</span>
+                </div>
+                <p class="history-entry-meta">
+                  ${(Number(trip.emissions_g) / 1000).toFixed(2)} kg CO₂ • ${Number(trip.distance_km).toFixed(2)} km • ${escapeHtml(trip.duration)}
+                </p>
+                <p class="history-entry-vehicle">${escapeHtml(trip.vehicle)}</p>
+              </article>
+            `,
+          )
+          .join("");
       }
 
       function getTripHistory() {
@@ -1129,35 +1262,28 @@
             : "No trips saved yet.";
         }
 
-        if (!profileRecentTripsEl) return;
+        if (profileRecentTripsEl) {
+          profileRecentTripsEl.innerHTML = buildTripEntries(
+            history,
+            "No trips saved yet.",
+          );
+        }
+      }
 
-        if (!history.length) {
-          profileRecentTripsEl.innerHTML = `
-            <div class="profile-summary-empty">
-              <strong>No trips saved yet.</strong>
-              <p>Run a route search and your total carbon emissions will appear here.</p>
-            </div>
-          `;
-          return;
+      function renderHistoryPanel() {
+        if (!historyPanel || !historyTripListEl) return;
+
+        const history = getTripHistory();
+        if (historyTripCountBadgeEl) {
+          historyTripCountBadgeEl.textContent = `${history.length} trip${
+            history.length === 1 ? "" : "s"
+          }`;
         }
 
-        profileRecentTripsEl.innerHTML = history
-          .slice(0, 5)
-          .map(
-            (trip) => `
-              <article class="profile-summary-entry">
-                <div class="profile-summary-entry-header">
-                  <span class="profile-summary-entry-title">${escapeHtml(trip.destination)}</span>
-                  <span class="route-pill">${formatTripDate(trip.timestamp)}</span>
-                </div>
-                <p class="profile-summary-entry-meta">
-                  ${(Number(trip.emissions_g) / 1000).toFixed(2)} kg CO₂ • ${Number(trip.distance_km).toFixed(2)} km • ${escapeHtml(trip.duration)}
-                </p>
-                <p class="profile-summary-entry-vehicle">${escapeHtml(trip.vehicle)}</p>
-              </article>
-            `,
-          )
-          .join("");
+        historyTripListEl.innerHTML = buildTripEntries(
+          history,
+          "No saved destinations yet.",
+        );
       }
 
       function openProfileSection() {
@@ -1169,6 +1295,20 @@
           behavior: "smooth",
           block: "start",
         });
+      }
+
+      function openHistoryPanel() {
+        if (!historyPanel) return;
+
+        renderHistoryPanel();
+        historyPanel.hidden = false;
+        historyPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
+      function closeHistoryPanel() {
+        if (!historyPanel) return;
+
+        historyPanel.hidden = true;
       }
 
       function populateSelect(selectEl, values, placeholder) {
@@ -1863,8 +2003,12 @@
 
           if (historyBtn) {
             historyBtn.addEventListener("click", () => {
-              showToast("📜 Route history is not enabled in this view.", 1800);
+              openHistoryPanel();
             });
+          }
+
+          if (historyCloseBtn) {
+            historyCloseBtn.addEventListener("click", closeHistoryPanel);
           }
 
           if (locateBtn) {
