@@ -1017,6 +1017,7 @@
           [],
           "Select Fuel Type",
         );
+        document.getElementById("FuelType").disabled = true;
       }
 
       function populateModels() {
@@ -1041,6 +1042,7 @@
           [],
           "Select Fuel Type",
         );
+        document.getElementById("FuelType").disabled = true;
       }
 
       function populateEngineSizes() {
@@ -1064,6 +1066,7 @@
           [],
           "Select Fuel Type",
         );
+        document.getElementById("FuelType").disabled = true;
       }
 
       function populateFuelTypes() {
@@ -1094,6 +1097,11 @@
 
         if (fuelTypes.length === 1) {
           fuelSelect.value = fuelTypes[0];
+          fuelSelect.disabled = true;
+        } else if (fuelTypes.length > 1) {
+          fuelSelect.disabled = false;
+        } else {
+          fuelSelect.disabled = true;
         }
       }
 

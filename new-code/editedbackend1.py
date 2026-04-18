@@ -78,11 +78,14 @@ def _clean_string(value: object, field_name: str) -> str:
 
 
 def _build_prediction_data(payload: dict) -> tuple[pd.DataFrame, dict]:
+    def value_of(lower_key: str, upper_key: str):
+        return payload.get(lower_key) if payload.get(lower_key) is not None else payload.get(upper_key)
+
     car_info = {
-        "Make": _clean_string(payload.get("make"), "make"),
-        "Model": _clean_string(payload.get("model"), "model"),
-        "EngineSize": float(payload.get("engine_size")),
-        "FuelType": _clean_string(payload.get("fuel_type"), "fuel_type"),
+        "Make": _clean_string(value_of("make", "Make"), "make"),
+        "Model": _clean_string(value_of("model", "Model"), "model"),
+        "EngineSize": float(value_of("engine_size", "EngineSize")),
+        "FuelType": _clean_string(value_of("fuel_type", "FuelType"), "fuel_type"),
     }
 
     prediction_frame = pd.DataFrame([car_info])
