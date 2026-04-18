@@ -176,38 +176,30 @@
       }
 
       /* search component */
-      .search {
-        display: flex;
-        align-items: center;
-        background: white;
-        border-radius: 48px;
-        padding: 0.2rem 0.2rem 0.2rem 1rem;
-        border: 1px solid #cce6bc;
-        transition: 0.2s;
-        background: #ffffff;
-        min-width: 220px;
-        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02);
-      }
-
-      .search:focus-within {
-        border-color: #6fbf4c;
-        box-shadow: 0 0 0 3px rgba(111, 191, 76, 0.2);
-      }
-
-      .search-icon {
-        color: #548b3a;
-        font-size: 24px;
-        margin-right: 6px;
-      }
-
       .search-input {
-        border: none;
-        padding: 12px 8px 12px 0;
-        font-size: 1rem;
         width: 100%;
-        background: transparent;
-        outline: none;
-        font-weight: 400;
+      }
+
+      .trip-search-form {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .trip-input-stack {
+        display: grid;
+        gap: 0.9rem;
+      }
+
+      .trip-primary-destination {
+        display: grid;
+        gap: 0.4rem;
+      }
+
+      .trip-primary-destination label {
+        font-size: 0.82rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        color: #496642;
       }
 
       .history button {
@@ -280,6 +272,114 @@
         align-items: center;
         gap: 0.65rem;
         margin-top: 0.8rem;
+      }
+
+      .trip-config-panel {
+        margin-top: 1rem;
+        border: 1px solid #d9e9ce;
+        border-radius: 18px;
+        background: #f7fbf2;
+        padding: 0.9rem;
+        display: grid;
+        gap: 0.8rem;
+      }
+
+      .trip-config-panel h4 {
+        margin: 0;
+        font-size: 0.92rem;
+        color: #1f3d1c;
+      }
+
+      .start-mode-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+      }
+
+      .start-mode-option {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        color: #244020;
+        font-size: 0.9rem;
+      }
+
+      .start-location-input {
+        width: 100%;
+      }
+
+      .destination-list {
+        display: grid;
+        gap: 0.6rem;
+      }
+
+      .destination-item {
+        border: 1px solid #d9e9ce;
+        border-radius: 14px;
+        background: #fbfef8;
+        padding: 0.65rem;
+        display: grid;
+        gap: 0.45rem;
+      }
+
+      .destination-item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .destination-item-label {
+        font-size: 0.84rem;
+        color: #496642;
+        font-weight: 700;
+      }
+
+      .destination-actions {
+        display: inline-flex;
+        gap: 0.35rem;
+      }
+
+      .destination-action-btn {
+        border: 1px solid #cbe5bb;
+        background: #eef7e7;
+        color: #1f3d1c;
+        min-height: 32px;
+        min-width: 32px;
+        padding: 0.25rem 0.45rem;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 700;
+      }
+
+      .destination-action-btn:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+
+      .trip-config-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.7rem;
+      }
+
+      .optimize-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        color: #244020;
+        font-size: 0.9rem;
+      }
+
+      .destination-limit-note {
+        color: #5b7154;
+        font-size: 0.82rem;
+      }
+
+      .trip-submit-btn {
+        width: 100%;
       }
 
       .location-badge,
@@ -865,6 +965,118 @@
         opacity: 1;
         transform: translateX(-50%) scale(1);
       }
+
+      /* autocomplete dropdown styles */
+      .search-input-wrapper {
+        position: relative;
+        width: 100%;
+      }
+
+      .autocomplete-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: #ffffff;
+        border: 1px solid #cfe1c4;
+        border-top: none;
+        border-radius: 0 0 18px 18px;
+        max-height: 300px;
+        overflow-y: auto;
+        z-index: 1000;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        display: none;
+        margin-top: -1px;
+      }
+
+      .autocomplete-dropdown.show {
+        display: block;
+      }
+
+      .autocomplete-item {
+        padding: 0.9rem 1rem;
+        border-bottom: 1px solid #f0f5eb;
+        cursor: pointer;
+        transition: background-color 0.15s;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+      }
+
+      .autocomplete-item:last-child {
+        border-bottom: none;
+      }
+
+      .autocomplete-item:hover,
+      .autocomplete-item.highlighted {
+        background-color: #f7fbf2;
+      }
+
+      .autocomplete-item-icon {
+        flex-shrink: 0;
+        color: #6fbf4c;
+        font-size: 1.1rem;
+        margin-top: 0.1rem;
+      }
+
+      .autocomplete-item-content {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .autocomplete-item-name {
+        font-weight: 600;
+        color: #1f3d1c;
+        font-size: 0.95rem;
+        word-break: break-word;
+      }
+
+      .autocomplete-item-description {
+        font-size: 0.82rem;
+        color: #5b7154;
+        margin-top: 0.2rem;
+        word-break: break-word;
+      }
+
+      .autocomplete-item-street {
+        font-size: 0.84rem;
+        color: #35562f;
+        margin-top: 0.2rem;
+        font-weight: 500;
+        word-break: break-word;
+      }
+
+      .autocomplete-loading {
+        padding: 1rem;
+        text-align: center;
+        color: #5b7154;
+        font-size: 0.9rem;
+      }
+
+      .autocomplete-no-results {
+        padding: 1rem;
+        text-align: center;
+        color: #5b7154;
+        font-size: 0.9rem;
+      }
+
+      @media (max-width: 640px) {
+        .autocomplete-dropdown {
+          max-height: 250px;
+        }
+
+        .autocomplete-item {
+          padding: 0.75rem 0.85rem;
+        }
+
+        .autocomplete-item-name {
+          font-size: 0.9rem;
+        }
+
+        .autocomplete-item-description {
+          font-size: 0.8rem;
+        }
+      }
     </style>
   </head>
   <body>
@@ -901,22 +1113,6 @@
           <a href="#" id="menuProfile">👤 Profile</a>
         </div>
       </div>
-
-      <!-- search form -->
-      <form class="ser" onsubmit="return false;">
-        <div class="search">
-          <span class="material-symbols-outlined search-icon">search</span>
-          <input
-            class="search-input"
-            type="search"
-            placeholder="Enter a destination..."
-            id="searchInput"
-          />
-          <button class="planner-btn" id="searchBtn" type="submit">
-            Get Route
-          </button>
-        </div>
-      </form>
 
       <!-- history button -->
       <div class="history">
@@ -974,6 +1170,96 @@
             >Location: detecting...</span
           >
         </div>
+
+        <form class="ser trip-search-form" onsubmit="return false;">
+          <div class="trip-config-panel">
+            <div class="trip-input-stack">
+              <div class="trip-primary-destination">
+                <label for="searchInput">Destination 1</label>
+                <div class="search-input-wrapper">
+                  <input
+                    class="planner-input search-input"
+                    type="search"
+                    placeholder="Enter first destination"
+                    id="searchInput"
+                  />
+                  <div
+                    class="autocomplete-dropdown"
+                    id="searchInput-autocomplete"
+                  ></div>
+                </div>
+              </div>
+
+              <h4>Trip Setup</h4>
+              <div
+                class="start-mode-controls"
+                role="radiogroup"
+                aria-label="Start location mode"
+              >
+                <label class="start-mode-option">
+                  <input
+                    type="radio"
+                    name="startMode"
+                    id="startModeCurrent"
+                    value="current"
+                    checked
+                  />
+                  Use current location
+                </label>
+                <label class="start-mode-option">
+                  <input
+                    type="radio"
+                    name="startMode"
+                    id="startModeCustom"
+                    value="custom"
+                  />
+                  Enter start location
+                </label>
+              </div>
+              <div class="search-input-wrapper">
+                <input
+                  id="startLocationInput"
+                  class="planner-input start-location-input"
+                  type="text"
+                  placeholder="Start location (optional override)"
+                  hidden
+                />
+                <div
+                  class="autocomplete-dropdown"
+                  id="startLocationInput-autocomplete"
+                ></div>
+              </div>
+
+              <h4>Additional Destinations</h4>
+              <div id="extraDestinations" class="destination-list"></div>
+              <div class="trip-config-actions">
+                <button
+                  id="addDestinationBtn"
+                  type="button"
+                  class="planner-secondary-btn"
+                >
+                  Add Destination
+                </button>
+                <label class="optimize-toggle">
+                  <input id="optimizeOrderToggle" type="checkbox" />
+                  Auto-optimize stop order
+                </label>
+              </div>
+              <p id="destinationLimitNote" class="destination-limit-note">
+                You can plan up to 5 destinations total.
+              </p>
+            </div>
+
+            <button
+              id="searchBtn"
+              type="submit"
+              class="planner-btn trip-submit-btn"
+            >
+              Get Route
+            </button>
+          </div>
+        </form>
+
         <div id="uiStatus" class="status-message" role="alert" hidden></div>
       </article>
     </section>
@@ -1084,9 +1370,11 @@
       let pendingInitialLocation = null;
       let pendingInitialLocationLabel = "St. Louis fallback";
       let routePolylines = [];
+      let destinationMarkers = [];
       let mapReady = false;
       let googleMapsApiKey = "";
       let currentSelectedRouteIndex = 0;
+      const MAX_DESTINATIONS = 5;
 
       const TRIP_HISTORY_STORAGE_KEY = "greenLeafTripHistory";
 
@@ -1151,6 +1439,61 @@
       const distanceTextEl = document.getElementById("distanceText");
       const durationTextEl = document.getElementById("durationText");
       const co2TextEl = document.getElementById("co2Text");
+      const startModeCurrentEl = document.getElementById("startModeCurrent");
+      const startModeCustomEl = document.getElementById("startModeCustom");
+      const startLocationInputEl =
+        document.getElementById("startLocationInput");
+      const extraDestinationsEl = document.getElementById("extraDestinations");
+      const addDestinationBtnEl = document.getElementById("addDestinationBtn");
+      const optimizeOrderToggleEl = document.getElementById(
+        "optimizeOrderToggle",
+      );
+      const destinationLimitNoteEl = document.getElementById(
+        "destinationLimitNote",
+      );
+
+      // Autocomplete instances map
+      const autocompleteInstances = new Map();
+
+      // Initialize autocomplete for search inputs
+      function initializeAutocomplete(inputElement) {
+        if (!inputElement) return;
+
+        const inputId = inputElement.id || inputElement.className;
+        if (autocompleteInstances.has(inputId)) {
+          return; // Already initialized
+        }
+
+        // Find or create the dropdown element
+        let dropdownElement = inputElement.parentElement.querySelector(
+          ".autocomplete-dropdown",
+        );
+        if (!dropdownElement) {
+          dropdownElement = document.createElement("div");
+          dropdownElement.className = "autocomplete-dropdown";
+          inputElement.parentElement.appendChild(dropdownElement);
+        }
+
+        const autocomplete = new PlacesAutocomplete(
+          inputElement,
+          dropdownElement,
+        );
+        autocompleteInstances.set(inputId, autocomplete);
+      }
+
+      // Initialize main autocomplete instances after DOM is ready
+      const initializeMainAutocompletes = () => {
+        const searchInput = document.getElementById("searchInput");
+        const startLocationInput =
+          document.getElementById("startLocationInput");
+
+        if (searchInput) {
+          initializeAutocomplete(searchInput);
+        }
+        if (startLocationInput) {
+          initializeAutocomplete(startLocationInput);
+        }
+      };
 
       function showToast(message, duration = 2200) {
         let toast = document.querySelector(".toast-msg");
@@ -1189,9 +1532,330 @@
         uiStatusEl.className = "status-message";
       }
 
+      async function geocodeLocationQuery(query) {
+        const response = await fetch("/search-location", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query }),
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(
+            data.error || `Could not find location for "${query}"`,
+          );
+        }
+
+        return data;
+      }
+
       function setLocationBadge(message) {
         if (locationBadgeEl) {
           locationBadgeEl.textContent = message;
+        }
+      }
+
+      // Google Places Autocomplete Handler
+      class PlacesAutocomplete {
+        constructor(inputElement, dropdownElement) {
+          this.inputElement = inputElement;
+          this.dropdownElement = dropdownElement;
+          this.autocompleteService = null;
+          this.placesService = null;
+          this.selectedPlace = null;
+          this.highlightedIndex = -1;
+          this.suggestions = [];
+          this.debounceTimer = null;
+          this.isOpen = false;
+
+          // Initialize Google Places services after API is loaded
+          if (
+            window.google &&
+            window.google.maps &&
+            window.google.maps.places
+          ) {
+            this.initializeServices();
+          } else {
+            // Wait for Google Maps API to load
+            const checkGoogle = setInterval(() => {
+              if (
+                window.google &&
+                window.google.maps &&
+                window.google.maps.places
+              ) {
+                this.initializeServices();
+                clearInterval(checkGoogle);
+              }
+            }, 100);
+          }
+
+          this.setupEventListeners();
+        }
+
+        initializeServices() {
+          this.autocompleteService =
+            new window.google.maps.places.AutocompleteService();
+          this.placesService = new window.google.maps.places.PlacesService(
+            document.createElement("div"),
+          );
+        }
+
+        setupEventListeners() {
+          this.inputElement.addEventListener("input", (e) =>
+            this.handleInput(e),
+          );
+          this.inputElement.addEventListener("keydown", (e) =>
+            this.handleKeydown(e),
+          );
+          this.inputElement.addEventListener("focus", () => {
+            if (this.suggestions.length > 0) {
+              this.openDropdown();
+            }
+          });
+          this.inputElement.addEventListener("blur", () => {
+            // Close dropdown after a short delay to allow click on suggestion
+            setTimeout(() => this.closeDropdown(), 200);
+          });
+          this.dropdownElement.addEventListener("mouseleave", () => {
+            this.highlightedIndex = -1;
+            this.updateHighlight();
+          });
+        }
+
+        handleInput(event) {
+          const query = event.target.value.trim();
+          clearTimeout(this.debounceTimer);
+          this.highlightedIndex = -1;
+
+          if (query.length < 2) {
+            this.suggestions = [];
+            this.closeDropdown();
+            return;
+          }
+
+          // Show loading state
+          this.dropdownElement.innerHTML =
+            '<div class="autocomplete-loading">Searching...</div>';
+          this.openDropdown();
+
+          this.debounceTimer = setTimeout(() => {
+            this.fetchSuggestions(query);
+          }, 300);
+        }
+
+        handleKeydown(event) {
+          if (!this.isOpen || this.suggestions.length === 0) {
+            return;
+          }
+
+          switch (event.key) {
+            case "ArrowDown":
+              event.preventDefault();
+              this.highlightedIndex = Math.min(
+                this.highlightedIndex + 1,
+                this.suggestions.length - 1,
+              );
+              this.updateHighlight();
+              break;
+            case "ArrowUp":
+              event.preventDefault();
+              this.highlightedIndex = Math.max(this.highlightedIndex - 1, -1);
+              this.updateHighlight();
+              break;
+            case "Enter":
+              event.preventDefault();
+              if (this.highlightedIndex >= 0) {
+                this.selectSuggestion(this.suggestions[this.highlightedIndex]);
+              }
+              break;
+            case "Escape":
+              event.preventDefault();
+              this.closeDropdown();
+              break;
+          }
+        }
+
+        fetchSuggestions(query) {
+          if (!this.autocompleteService) {
+            return;
+          }
+
+          this.autocompleteService.getPlacePredictions(
+            { input: query, componentRestrictions: { country: [] } },
+            (predictions, status) => {
+              if (status !== window.google.maps.places.PlacesServiceStatus.OK) {
+                this.dropdownElement.innerHTML =
+                  '<div class="autocomplete-no-results">No results found</div>';
+                this.suggestions = [];
+                return;
+              }
+
+              this.suggestions = predictions || [];
+              this.renderSuggestions();
+            },
+          );
+        }
+
+        renderSuggestions() {
+          if (this.suggestions.length === 0) {
+            this.dropdownElement.innerHTML =
+              '<div class="autocomplete-no-results">No results found</div>';
+            return;
+          }
+
+          const html = this.suggestions
+            .map((suggestion, index) =>
+              this.renderSuggestionItem(suggestion, index),
+            )
+            .join("");
+
+          this.dropdownElement.innerHTML = html;
+
+          // Add click listeners to suggestions
+          this.dropdownElement
+            .querySelectorAll(".autocomplete-item")
+            .forEach((item, index) => {
+              item.addEventListener("click", () => {
+                this.selectSuggestion(this.suggestions[index]);
+              });
+              item.addEventListener("mouseenter", () => {
+                this.highlightedIndex = index;
+                this.updateHighlight();
+              });
+            });
+
+          this.openDropdown();
+        }
+
+        renderSuggestionItem(suggestion, index) {
+          const name = this.getSuggestionName(suggestion);
+          const street = this.getSuggestionStreet(suggestion);
+          const description = this.getSuggestionDescription(suggestion);
+          const icon = "📍";
+
+          return `
+            <div class="autocomplete-item ${index === this.highlightedIndex ? "highlighted" : ""}" data-index="${index}">
+              <div class="autocomplete-item-icon">${icon}</div>
+              <div class="autocomplete-item-content">
+                <div class="autocomplete-item-name">${this.escapeHtml(name)}</div>
+                ${street ? `<div class="autocomplete-item-street">${this.escapeHtml(street)}</div>` : ""}
+                ${description ? `<div class="autocomplete-item-description">${this.escapeHtml(description)}</div>` : ""}
+              </div>
+            </div>
+          `;
+        }
+
+        getSuggestionName(suggestion) {
+          return (
+            suggestion?.structured_formatting?.main_text ||
+            suggestion.main_text ||
+            (suggestion.description
+              ? suggestion.description.split(",")[0].trim()
+              : "")
+          );
+        }
+
+        getSuggestionStreet(suggestion) {
+          const description = suggestion?.description || "";
+          if (!description) {
+            return "";
+          }
+
+          const parts = description
+            .split(",")
+            .map((part) => part.trim())
+            .filter(Boolean);
+
+          if (parts.length === 0) {
+            return "";
+          }
+
+          const name = this.getSuggestionName(suggestion);
+          if (parts.length > 1 && parts[0] === name) {
+            return parts[1];
+          }
+
+          return parts[0];
+        }
+
+        getSuggestionDescription(suggestion) {
+          return (
+            suggestion?.structured_formatting?.secondary_text ||
+            suggestion.secondary_text ||
+            ""
+          );
+        }
+
+        updateHighlight() {
+          this.dropdownElement
+            .querySelectorAll(".autocomplete-item")
+            .forEach((item, index) => {
+              item.classList.toggle(
+                "highlighted",
+                index === this.highlightedIndex,
+              );
+            });
+        }
+
+        selectSuggestion(suggestion) {
+          // Get place details to get lat/lng
+          if (!this.placesService) {
+            return;
+          }
+
+          this.placesService.getDetails(
+            {
+              placeId: suggestion.place_id,
+              fields: ["geometry", "formatted_address", "name"],
+            },
+            (place, status) => {
+              if (status !== window.google.maps.places.PlacesServiceStatus.OK) {
+                console.error("Error getting place details:", status);
+                return;
+              }
+
+              this.selectedPlace = {
+                lat: place.geometry.location.lat(),
+                lng: place.geometry.location.lng(),
+                address: place.formatted_address,
+                name: place.name,
+              };
+
+              // Update input with selected location name
+              this.inputElement.value = place.formatted_address;
+              this.closeDropdown();
+
+              // Trigger input event to notify other listeners
+              this.inputElement.dispatchEvent(
+                new Event("autocomplete-select", { bubbles: true }),
+              );
+            },
+          );
+        }
+
+        openDropdown() {
+          this.dropdownElement.classList.add("show");
+          this.isOpen = true;
+        }
+
+        closeDropdown() {
+          this.dropdownElement.classList.remove("show");
+          this.isOpen = false;
+          this.highlightedIndex = -1;
+        }
+
+        escapeHtml(text) {
+          const div = document.createElement("div");
+          div.textContent = text;
+          return div.innerHTML;
+        }
+
+        getSelectedPlace() {
+          return this.selectedPlace;
+        }
+
+        setSelectedPlace(place) {
+          this.selectedPlace = place;
         }
       }
 
@@ -1675,6 +2339,211 @@
         }
       }
 
+      function updateStartModeVisibility() {
+        if (!startLocationInputEl || !startModeCustomEl) return;
+        const useCustomStart = startModeCustomEl.checked;
+        startLocationInputEl.hidden = !useCustomStart;
+      }
+
+      function getDestinationInputs() {
+        const primaryInput = document.getElementById("searchInput");
+        const extraInputs = Array.from(
+          document.querySelectorAll(".extra-destination-input"),
+        );
+        return [primaryInput, ...extraInputs];
+      }
+
+      function refreshDestinationControls() {
+        const allInputs = getDestinationInputs();
+        const destinationItems = Array.from(
+          document.querySelectorAll(".destination-item"),
+        );
+
+        destinationItems.forEach((item, index) => {
+          const labelEl = item.querySelector(".destination-item-label");
+          const upBtn = item.querySelector(".destination-move-up");
+          const downBtn = item.querySelector(".destination-move-down");
+
+          if (labelEl) {
+            labelEl.textContent = `Destination ${index + 2}`;
+          }
+          if (upBtn) {
+            upBtn.disabled = false;
+          }
+          if (downBtn) {
+            downBtn.disabled = index === destinationItems.length - 1;
+          }
+        });
+
+        if (addDestinationBtnEl) {
+          addDestinationBtnEl.disabled = allInputs.length >= MAX_DESTINATIONS;
+        }
+
+        if (destinationLimitNoteEl) {
+          destinationLimitNoteEl.textContent = `${allInputs.length}/${MAX_DESTINATIONS} destinations configured.`;
+        }
+      }
+
+      function moveDestinationValue(fromIndex, toIndex) {
+        const allInputs = getDestinationInputs();
+        if (
+          fromIndex < 0 ||
+          toIndex < 0 ||
+          fromIndex >= allInputs.length ||
+          toIndex >= allInputs.length
+        ) {
+          return;
+        }
+
+        const currentValue = allInputs[fromIndex].value;
+        allInputs[fromIndex].value = allInputs[toIndex].value;
+        allInputs[toIndex].value = currentValue;
+      }
+
+      function createDestinationItem() {
+        if (!extraDestinationsEl) return;
+        const destinationItems = Array.from(
+          document.querySelectorAll(".destination-item"),
+        );
+        if (destinationItems.length + 1 >= MAX_DESTINATIONS) {
+          refreshDestinationControls();
+          return;
+        }
+
+        const row = document.createElement("div");
+        row.className = "destination-item";
+        row.innerHTML = `
+          <div class="destination-item-header">
+            <span class="destination-item-label">Destination 2</span>
+            <div class="destination-actions">
+              <button type="button" class="destination-action-btn destination-move-up" aria-label="Move destination up">↑</button>
+              <button type="button" class="destination-action-btn destination-move-down" aria-label="Move destination down">↓</button>
+              <button type="button" class="destination-action-btn destination-remove" aria-label="Remove destination">✕</button>
+            </div>
+          </div>
+          <div class="search-input-wrapper">
+            <input type="text" class="planner-input extra-destination-input" placeholder="Enter destination" />
+            <div class="autocomplete-dropdown"></div>
+          </div>
+        `;
+
+        extraDestinationsEl.appendChild(row);
+
+        const getCurrentRowIndex = () =>
+          Array.from(document.querySelectorAll(".destination-item")).indexOf(
+            row,
+          );
+
+        // Initialize autocomplete for the new destination input
+        const newInput = row.querySelector(".extra-destination-input");
+        if (newInput) {
+          initializeAutocomplete(newInput);
+        }
+
+        row
+          .querySelector(".destination-move-up")
+          .addEventListener("click", () => {
+            const rowIndex = getCurrentRowIndex();
+            moveDestinationValue(rowIndex + 1, rowIndex);
+            refreshDestinationControls();
+          });
+
+        row
+          .querySelector(".destination-move-down")
+          .addEventListener("click", () => {
+            const rowIndex = getCurrentRowIndex();
+            moveDestinationValue(rowIndex + 1, rowIndex + 2);
+            refreshDestinationControls();
+          });
+
+        row
+          .querySelector(".destination-remove")
+          .addEventListener("click", () => {
+            row.remove();
+            refreshDestinationControls();
+          });
+
+        row
+          .querySelector(".extra-destination-input")
+          .addEventListener("input", () => {
+            clearUiStatus();
+          });
+
+        refreshDestinationControls();
+      }
+
+      function getDestinationQueries() {
+        const allInputs = getDestinationInputs();
+        return allInputs.map((inputEl) => inputEl.value.trim()).filter(Boolean);
+      }
+
+      // Helper function to get selected place data from autocomplete
+      function getAutocompleteSelectedPlace(inputElement) {
+        if (!inputElement) return null;
+
+        const inputId = inputElement.id || inputElement.className;
+        const autocompleteInstance = autocompleteInstances.get(inputId);
+
+        if (autocompleteInstance) {
+          return autocompleteInstance.getSelectedPlace();
+        }
+
+        return null;
+      }
+
+      // Helper function to geocode location, preferring autocomplete selected place if available
+      async function geocodeLocation(inputElement, query) {
+        // Check if this location was selected from autocomplete
+        const selectedPlace = getAutocompleteSelectedPlace(inputElement);
+        if (selectedPlace) {
+          return selectedPlace;
+        }
+
+        // Fall back to backend geocoding if no selected place
+        return await geocodeLocationQuery(query);
+      }
+
+      // Helper function to get destination inputs with their elements
+      function getDestinationInputsWithElements() {
+        const searchInput = document.getElementById("searchInput");
+        const extraInputs = Array.from(
+          document.querySelectorAll(".extra-destination-input"),
+        );
+        return searchInput ? [searchInput, ...extraInputs] : extraInputs;
+      }
+
+      function clearDestinationMarkers() {
+        if (destinationMarker) {
+          destinationMarker.setMap(null);
+          destinationMarker = null;
+        }
+        destinationMarkers.forEach((marker) => marker.setMap(null));
+        destinationMarkers = [];
+      }
+
+      function updateDestinationMarkers(destinations) {
+        if (!Array.isArray(destinations) || !map) return;
+        clearDestinationMarkers();
+
+        destinations.forEach((stop, index) => {
+          const marker = new google.maps.Marker({
+            position: { lat: stop.lat, lng: stop.lng },
+            map,
+            title: stop.address || `Destination ${index + 1}`,
+            label: String(index + 1),
+            icon: {
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: 8,
+              fillColor: "#2b6e2f",
+              fillOpacity: 1,
+              strokeColor: "#ffffff",
+              strokeWeight: 2,
+            },
+          });
+          destinationMarkers.push(marker);
+        });
+      }
+
       function updateDestinationMarker(location, title) {
         const destination = { lat: location.lat, lng: location.lng };
         if (!destinationMarker) {
@@ -1855,14 +2724,18 @@
         clearUiStatus();
 
         if (!searchBtn) return;
-        const query = document.getElementById("searchInput").value.trim();
-        if (!query) {
-          setUiStatus("Enter a destination first.", "error");
+        const destinationQueries = getDestinationQueries();
+        if (!destinationQueries.length) {
+          setUiStatus("Enter at least one destination.", "error");
           return;
         }
 
-        if (!userLocation) {
-          await resolveInitialLocation();
+        if (destinationQueries.length > MAX_DESTINATIONS) {
+          setUiStatus(
+            `You can only add up to ${MAX_DESTINATIONS} destinations.`,
+            "error",
+          );
+          return;
         }
 
         const car = getSelectedCar();
@@ -1875,37 +2748,86 @@
         searchBtn.textContent = "Searching...";
 
         try {
-          const destinationResponse = await fetch("/search-location", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ query }),
-          });
+          let resolvedOrigin = null;
+          let originLabel = "Current location";
+          const useCustomStart = Boolean(
+            startModeCustomEl && startModeCustomEl.checked,
+          );
 
-          const destinationData = await destinationResponse.json();
-          if (!destinationResponse.ok) {
-            throw new Error(
-              destinationData.error || "Could not find destination",
+          if (useCustomStart) {
+            const customOriginQuery = startLocationInputEl
+              ? startLocationInputEl.value.trim()
+              : "";
+            if (!customOriginQuery) {
+              throw new Error(
+                "Enter a start location or switch to current location.",
+              );
+            }
+
+            const originData = await geocodeLocation(
+              startLocationInputEl,
+              customOriginQuery,
             );
+            resolvedOrigin = { lat: originData.lat, lng: originData.lng };
+            originLabel = originData.address || customOriginQuery;
+            userLocation = resolvedOrigin;
+            if (mapReady) {
+              centerMap(resolvedOrigin);
+            }
+          } else {
+            if (!userLocation) {
+              await resolveInitialLocation();
+            }
+            resolvedOrigin = userLocation;
+            originLabel = pendingInitialLocationLabel || "Current location";
           }
 
+          const resolvedDestinations = [];
+          for (let index = 0; index < destinationQueries.length; index += 1) {
+            const destinationQuery = destinationQueries[index];
+            const destinationInputs = getDestinationInputsWithElements();
+            const destinationInputElement = destinationInputs[index];
+            const destinationData = await geocodeLocation(
+              destinationInputElement,
+              destinationQuery,
+            );
+            resolvedDestinations.push({
+              lat: destinationData.lat,
+              lng: destinationData.lng,
+              address: destinationData.address || destinationQuery,
+            });
+          }
+
+          const finalDestination =
+            resolvedDestinations[resolvedDestinations.length - 1];
+
           destinationLocation = {
-            lat: destinationData.lat,
-            lng: destinationData.lng,
+            lat: finalDestination.lat,
+            lng: finalDestination.lng,
           };
-          currentRouteDestinationLabel = destinationData.address || query;
+          currentRouteDestinationLabel = [
+            originLabel,
+            ...resolvedDestinations.map((destination) => destination.address),
+          ].join(" -> ");
           currentRouteCar = car;
-          updateDestinationMarker(
-            destinationLocation,
-            currentRouteDestinationLabel,
-          );
+
+          updateDestinationMarkers(resolvedDestinations);
           centerMap(destinationLocation);
 
           const routeResponse = await fetch("/get-greenest-route", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              origin: userLocation,
+              origin: resolvedOrigin,
               destination: destinationLocation,
+              stops: resolvedDestinations.map((stop) => ({
+                lat: stop.lat,
+                lng: stop.lng,
+                name: stop.address,
+              })),
+              optimize_order: Boolean(
+                optimizeOrderToggleEl && optimizeOrderToggleEl.checked,
+              ),
               car,
             }),
           });
@@ -1923,7 +2845,7 @@
           renderProfileSummary();
 
           setUiStatus(
-            `Greenest route found for ${destinationData.address || query}.`,
+            `Greenest route found across ${resolvedDestinations.length} destination${resolvedDestinations.length === 1 ? "" : "s"}.`,
             "success",
           );
           showToast("🌿 Greenest route ready", 1500);
@@ -2100,6 +3022,31 @@
             locateBtn.addEventListener("click", refreshLocation);
           }
 
+          if (addDestinationBtnEl) {
+            addDestinationBtnEl.addEventListener(
+              "click",
+              createDestinationItem,
+            );
+          }
+
+          if (startModeCurrentEl) {
+            startModeCurrentEl.addEventListener(
+              "change",
+              updateStartModeVisibility,
+            );
+          }
+
+          if (startModeCustomEl) {
+            startModeCustomEl.addEventListener(
+              "change",
+              updateStartModeVisibility,
+            );
+          }
+
+          if (startLocationInputEl) {
+            startLocationInputEl.addEventListener("input", clearUiStatus);
+          }
+
           if (saveProfileBtn) {
             saveProfileBtn.addEventListener("click", saveProfile);
           }
@@ -2113,6 +3060,12 @@
             .addEventListener("input", () => {
               clearUiStatus();
             });
+
+          updateStartModeVisibility();
+          refreshDestinationControls();
+
+          // Initialize Google Places Autocomplete
+          initializeMainAutocompletes();
 
           showToast("🌍 Green Leaf map ready", 2000);
         } catch (error) {
