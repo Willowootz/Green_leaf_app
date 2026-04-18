@@ -398,6 +398,98 @@
         padding: 1.1rem;
       }
 
+      .profile-summary-card {
+        margin-top: 1rem;
+      }
+
+      .profile-summary-header {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 0.8rem;
+        align-items: flex-start;
+        margin-bottom: 0.9rem;
+      }
+
+      .profile-summary-header p {
+        margin-top: 0.35rem;
+        color: #5b7154;
+        font-size: 0.92rem;
+      }
+
+      .profile-summary-metrics {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.8rem;
+      }
+
+      .profile-summary-metrics p {
+        border-radius: 18px;
+        background: #f7fbf2;
+        border: 1px solid #d9e9ce;
+        padding: 0.95rem;
+        color: #244020;
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+      }
+
+      .profile-summary-metrics strong {
+        font-size: 0.82rem;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+        color: #496642;
+      }
+
+      .profile-summary-metric-value {
+        font-size: 1.18rem;
+        font-weight: 800;
+      }
+
+      .profile-summary-list {
+        display: grid;
+        gap: 0.8rem;
+        margin-top: 1rem;
+      }
+
+      .profile-summary-entry {
+        border-radius: 18px;
+        background: #fbfef8;
+        border: 1px solid #d9e9ce;
+        padding: 0.95rem 1rem;
+      }
+
+      .profile-summary-entry-header {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 0.6rem;
+        align-items: center;
+        margin-bottom: 0.45rem;
+      }
+
+      .profile-summary-entry-title {
+        font-weight: 700;
+        color: #1f3d1c;
+      }
+
+      .profile-summary-entry-meta,
+      .profile-summary-entry-vehicle {
+        margin-top: 0.3rem;
+        color: #5b7154;
+        font-size: 0.92rem;
+        line-height: 1.45;
+        overflow-wrap: anywhere;
+      }
+
+      .profile-summary-empty {
+        border-radius: 18px;
+        background: #f7fbf2;
+        border: 1px dashed #cde2c0;
+        padding: 1rem;
+        color: #3b5442;
+      }
+
       .trip-metrics {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -680,6 +772,7 @@
           <a href="#" id="menuDiscover">🌱 Discover Parks</a>
           <a href="#" id="menuFarm">🥬 Urban Farms</a>
           <a href="#" id="menuEvents">📅 Eco Events</a>
+          <a href="#" id="menuProfile">👤 Profile</a>
         </div>
       </div>
 
@@ -783,6 +876,44 @@
       aria-label="Route options"
     ></section>
 
+    <section
+      id="profileSummarySection"
+      class="trip-details-card profile-summary-card"
+      aria-labelledby="profileSummaryHeading"
+      hidden
+    >
+      <div class="profile-summary-header">
+        <div>
+          <h3 id="profileSummaryHeading">Profile</h3>
+          <p>Track the total carbon emissions from every saved trip.</p>
+        </div>
+        <span id="profileTripCountBadge" class="route-pill">0 trips</span>
+      </div>
+
+      <div class="profile-summary-metrics">
+        <p>
+          <strong>Total emissions</strong>
+          <span id="profileTotalEmissions" class="profile-summary-metric-value"
+            >0.00 kg CO₂</span
+          >
+        </p>
+        <p>
+          <strong>Saved trips</strong>
+          <span id="profileTripCount" class="profile-summary-metric-value"
+            >0</span
+          >
+        </p>
+        <p>
+          <strong>Latest trip</strong>
+          <span id="profileLatestTrip" class="profile-summary-metric-value"
+            >No trips saved yet.</span
+          >
+        </p>
+      </div>
+
+      <div id="profileRecentTrips" class="profile-summary-list"></div>
+    </section>
+
     <datalist id="makeOptions"></datalist>
     <datalist id="modelOptions"></datalist>
     <datalist id="fuelOptions"></datalist>
@@ -805,6 +936,9 @@
       let routePolylines = [];
       let mapReady = false;
       let googleMapsApiKey = "";
+      let currentSelectedRouteIndex = 0;
+
+      const TRIP_HISTORY_STORAGE_KEY = "greenLeafTripHistory";
 
       const fuelTypeMap = {
         X: "Regular Gasoline",
@@ -819,14 +953,40 @@
         return fuelTypeMap[fuelCode] || fuelCode;
       }
 
+      function escapeHtml(value) {
+        return String(value)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#39;");
+      }
+
       const profileToggleBtn = document.getElementById("profileBtn");
       const profileMenu = document.getElementById("profileMenu");
+      const menuDiscover = document.getElementById("menuDiscover");
+      const menuFarm = document.getElementById("menuFarm");
+      const menuEvents = document.getElementById("menuEvents");
+      const menuProfile = document.getElementById("menuProfile");
       const historyBtn = document.getElementById("historyBtn");
       const searchForm = document.querySelector(".ser");
       const locateBtn = document.getElementById("locateBtn");
       const saveProfileBtn = document.getElementById("saveProfileBtn");
       const searchBtn = document.getElementById("searchBtn");
       const routesListEl = document.getElementById("routesList");
+      const profileSummarySection = document.getElementById(
+        "profileSummarySection",
+      );
+      const profileTripCountBadgeEl = document.getElementById(
+        "profileTripCountBadge",
+      );
+      const profileTotalEmissionsEl = document.getElementById(
+        "profileTotalEmissions",
+      );
+      const profileTripCountEl = document.getElementById("profileTripCount");
+      const profileLatestTripEl = document.getElementById("profileLatestTrip");
+      const profileRecentTripsEl =
+        document.getElementById("profileRecentTrips");
       const uiStatusEl = document.getElementById("uiStatus");
       const locationBadgeEl = document.getElementById("locationBadge");
       const activeVehicleBadgeEl =
@@ -877,6 +1037,138 @@
         if (locationBadgeEl) {
           locationBadgeEl.textContent = message;
         }
+      }
+
+      function getTripHistory() {
+        try {
+          const storedTrips = localStorage.getItem(TRIP_HISTORY_STORAGE_KEY);
+          if (!storedTrips) return [];
+
+          const parsedTrips = JSON.parse(storedTrips);
+          return Array.isArray(parsedTrips) ? parsedTrips : [];
+        } catch (error) {
+          console.warn("Could not read trip history:", error);
+          return [];
+        }
+      }
+
+      function setTripHistory(trips) {
+        try {
+          localStorage.setItem(
+            TRIP_HISTORY_STORAGE_KEY,
+            JSON.stringify(trips.slice(0, 25)),
+          );
+        } catch (error) {
+          console.warn("Could not save trip history:", error);
+        }
+      }
+
+      function formatTripDate(timestamp) {
+        const date = new Date(timestamp);
+        if (Number.isNaN(date.getTime())) {
+          return "Recently";
+        }
+
+        return date.toLocaleString([], {
+          month: "short",
+          day: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+        });
+      }
+
+      function getVehicleLabel(car) {
+        if (!hasValidCar(car)) {
+          return "Vehicle not set";
+        }
+
+        return `${car.Make} ${car.Model} ${car.EngineSize}L (${getFuelLabel(car.FuelType)})`;
+      }
+
+      function saveTripToHistory(destinationLabel, route, car) {
+        const history = getTripHistory();
+        history.unshift({
+          id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          destination: destinationLabel || "Unknown destination",
+          emissions_g: Number(route?.co2_emissions_g) || 0,
+          distance_km: Number(route?.distance_km) || 0,
+          duration: route?.duration || "--",
+          vehicle: getVehicleLabel(car),
+          timestamp: new Date().toISOString(),
+        });
+        setTripHistory(history);
+        return history;
+      }
+
+      function renderProfileSummary() {
+        if (!profileSummarySection) return;
+
+        const history = getTripHistory();
+        const totalEmissionsG = history.reduce(
+          (sum, trip) => sum + (Number(trip.emissions_g) || 0),
+          0,
+        );
+
+        if (profileTripCountBadgeEl) {
+          profileTripCountBadgeEl.textContent = `${history.length} trip${
+            history.length === 1 ? "" : "s"
+          }`;
+        }
+
+        if (profileTotalEmissionsEl) {
+          profileTotalEmissionsEl.textContent = `${(totalEmissionsG / 1000).toFixed(2)} kg CO₂`;
+        }
+
+        if (profileTripCountEl) {
+          profileTripCountEl.textContent = String(history.length);
+        }
+
+        if (profileLatestTripEl) {
+          profileLatestTripEl.textContent = history.length
+            ? `${history[0].destination} • ${(Number(history[0].emissions_g) / 1000).toFixed(2)} kg CO₂`
+            : "No trips saved yet.";
+        }
+
+        if (!profileRecentTripsEl) return;
+
+        if (!history.length) {
+          profileRecentTripsEl.innerHTML = `
+            <div class="profile-summary-empty">
+              <strong>No trips saved yet.</strong>
+              <p>Run a route search and your total carbon emissions will appear here.</p>
+            </div>
+          `;
+          return;
+        }
+
+        profileRecentTripsEl.innerHTML = history
+          .slice(0, 5)
+          .map(
+            (trip) => `
+              <article class="profile-summary-entry">
+                <div class="profile-summary-entry-header">
+                  <span class="profile-summary-entry-title">${escapeHtml(trip.destination)}</span>
+                  <span class="route-pill">${formatTripDate(trip.timestamp)}</span>
+                </div>
+                <p class="profile-summary-entry-meta">
+                  ${(Number(trip.emissions_g) / 1000).toFixed(2)} kg CO₂ • ${Number(trip.distance_km).toFixed(2)} km • ${escapeHtml(trip.duration)}
+                </p>
+                <p class="profile-summary-entry-vehicle">${escapeHtml(trip.vehicle)}</p>
+              </article>
+            `,
+          )
+          .join("");
+      }
+
+      function openProfileSection() {
+        if (!profileSummarySection) return;
+
+        profileSummarySection.hidden = false;
+        renderProfileSummary();
+        profileSummarySection.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
       }
 
       function populateSelect(selectEl, values, placeholder) {
@@ -1264,6 +1556,8 @@
         const route = currentRoutes[selectedIndex];
         if (!route) return;
 
+        currentSelectedRouteIndex = selectedIndex;
+
         setRouteHighlight(selectedIndex);
         setActiveRouteCard(selectedIndex);
 
@@ -1400,6 +1694,8 @@
           drawRoutes(routeData.routes);
           renderRouteCards(routeData.routes, greenest.index);
           selectRoute(greenest.index);
+          saveTripToHistory(destinationData.address || query, greenest, car);
+          renderProfileSummary();
 
           setUiStatus(
             `Greenest route found for ${destinationData.address || query}.`,
@@ -1526,6 +1822,7 @@
           const hasSavedProfile = loadProfile();
           setProfileMenuState(!hasSavedProfile);
           updateActiveVehicleBadge();
+          renderProfileSummary();
 
           await resolveInitialLocation();
           await loadGoogleMapsAPI();
@@ -1533,6 +1830,34 @@
           if (profileToggleBtn) {
             profileToggleBtn.addEventListener("click", () => {
               setProfileMenuState(profileMenu.hidden);
+            });
+          }
+
+          if (menuDiscover) {
+            menuDiscover.addEventListener("click", (event) => {
+              event.preventDefault();
+              showToast("Discover Parks is coming soon.", 1700);
+            });
+          }
+
+          if (menuFarm) {
+            menuFarm.addEventListener("click", (event) => {
+              event.preventDefault();
+              showToast("Urban Farms is coming soon.", 1700);
+            });
+          }
+
+          if (menuEvents) {
+            menuEvents.addEventListener("click", (event) => {
+              event.preventDefault();
+              showToast("Eco Events is coming soon.", 1700);
+            });
+          }
+
+          if (menuProfile) {
+            menuProfile.addEventListener("click", (event) => {
+              event.preventDefault();
+              openProfileSection();
             });
           }
 

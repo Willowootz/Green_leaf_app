@@ -136,7 +136,7 @@ def _normalize_stops(stops: object) -> list[dict]:
 
 @app.route("/")
 def index():
-    return send_from_directory(FRONTEND_DIR, "index.html.html")
+    return send_from_directory(FRONTEND_DIR, "index.html")
 
 
 @app.route("/get-api-key")
