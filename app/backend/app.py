@@ -5,17 +5,22 @@ import json
 import pandas as pd
 import requests
 import toml
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, jsonify, render_template, request
 from flask_cors import CORS
 from sklearn.ensemble import RandomForestRegressor
 
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-DATA_PATH = BASE_DIR / "data" / "vehicles.json"
-SECRETS_PATH = BASE_DIR / "secrets.toml"
-FRONTEND_DIR = BASE_DIR / "new-code"
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+DATA_PATH = PROJECT_ROOT / "data" / "raw" / "vehicles.json"
+SECRETS_PATH = PROJECT_ROOT / "secrets.toml"
+TEMPLATES_DIR = PROJECT_ROOT / "app" / "frontend" / "templates"
+STATIC_DIR = PROJECT_ROOT / "app" / "frontend" / "static"
 
-app = Flask(__name__)
+app = Flask(
+    __name__,
+    template_folder=str(TEMPLATES_DIR),
+    static_folder=str(STATIC_DIR),
+)
 CORS(app)
 
 
@@ -136,7 +141,7 @@ def _normalize_stops(stops: object) -> list[dict]:
 
 @app.route("/")
 def index():
-    return send_from_directory(FRONTEND_DIR, "index.html")
+    return render_template("index.html")
 
 
 @app.route("/get-api-key")
