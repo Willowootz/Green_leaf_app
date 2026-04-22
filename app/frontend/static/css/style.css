@@ -1,4 +1,5 @@
 
+        /* ===== GLOBAL RESET & BASE STYLES ===== */
         * {
             margin: 0;
             padding: 0;
@@ -13,7 +14,7 @@
             transition: all 0.2s ease;
         }
 
-        /* header & layout */
+        /* ===== HEADER & TITLE ===== */
         .top-bar {
             display: flex;
             flex-wrap: wrap;
@@ -47,7 +48,7 @@
             margin-bottom: 1.8rem;
         }
 
-        /* action row: profile + menu + search + history */
+        /* ===== ACTION PANEL: PROFILE, MENU, SEARCH, HISTORY ===== */
         .action-panel {
             display: flex;
             flex-wrap: wrap;
@@ -85,7 +86,7 @@
             color: #2a6e2f;
         }
 
-        /* dropdown menu (modern) */
+        /* ===== DROPDOWN MENU ===== */
         .dropdown {
             position: relative;
             display: inline-block;
@@ -151,7 +152,7 @@
             display: block;
         }
 
-        /* search component */
+        /* ===== SEARCH COMPONENT ===== */
         .search {
             display: flex;
             align-items: center;
@@ -223,7 +224,7 @@
             transform: translateY(-1px);
         }
 
-        /* map container */
+        /* ===== MAP CONTAINER ===== */
         .map-container {
             margin-top: 1.5rem;
             border-radius: 32px;
@@ -241,7 +242,7 @@
             border-radius: 28px;
         }
 
-        /* additional info banner */
+        /* ===== ECO INFO BANNER ===== */
         .eco-note {
             margin-top: 1.4rem;
             background: #eef7e7;
@@ -261,7 +262,7 @@
             font-size: 1.3rem;
         }
 
-        /* responsive */
+        /* ===== RESPONSIVE DESIGN ===== */
         @media (max-width: 700px) {
             body {
                 padding: 1rem;
@@ -289,7 +290,7 @@
             }
         }
 
-        /* simple toast */
+        /* ===== TOAST NOTIFICATIONS ===== */
         .toast-msg {
             position: fixed;
             bottom: 24px;

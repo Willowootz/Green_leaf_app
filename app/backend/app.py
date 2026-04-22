@@ -10,6 +10,7 @@ from flask_cors import CORS
 from sklearn.ensemble import RandomForestRegressor
 
 
+# ===== CONFIGURATION & PATHS =====
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DATA_PATH = PROJECT_ROOT / "data" / "raw" / "vehicles.json"
 SECRETS_PATH = PROJECT_ROOT / "secrets.toml"
@@ -24,6 +25,7 @@ app = Flask(
 CORS(app)
 
 
+# ===== UTILITY FUNCTIONS =====
 def _format_duration(total_seconds):
     hours, remainder = divmod(int(total_seconds), 3600)
     minutes, _ = divmod(remainder, 60)
@@ -42,6 +44,7 @@ def _load_google_api_key() -> str:
 GOOGLE_API_KEY = _load_google_api_key()
 
 
+# ===== MODEL TRAINING =====
 def _load_training_data() -> pd.DataFrame:
     if not DATA_PATH.exists():
         raise FileNotFoundError(f"Training data not found: {DATA_PATH}")
@@ -71,6 +74,7 @@ def _build_model() -> tuple[RandomForestRegressor, list[str], pd.DataFrame]:
 model, training_columns, training_frame = _build_model()
 
 
+# ===== DATA NORMALIZATION =====
 def _clean_string(value: object, field_name: str) -> str:
     if value is None:
         raise ValueError(f"Missing required field: {field_name}")
@@ -139,6 +143,7 @@ def _normalize_stops(stops: object) -> list[dict]:
     return normalized
 
 
+# ===== API ROUTES =====
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -372,5 +377,6 @@ def get_greenest_route():
     )
 
 
+# ===== APPLICATION ENTRY POINT =====
 if __name__ == "__main__":
     app.run(debug=True)

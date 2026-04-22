@@ -7,6 +7,7 @@
       content="width=device-width, initial-scale=1.0, user-scalable=yes"
     />
     <title>Green Leaf | Sustainable Map Explorer</title>
+    <!-- ===== EXTERNAL ASSETS ===== -->
     <!-- Google Material Icons & Symbols -->
     <link
       rel="stylesheet"
@@ -16,6 +17,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700&display=swap"
       rel="stylesheet"
     />
+    <!-- ===== EMBEDDED STYLES ===== -->
     <style>
       * {
         margin: 0;
@@ -1080,6 +1082,7 @@
     </style>
   </head>
   <body>
+    <!-- ===== PAGE HEADER ===== -->
     <div class="top-bar">
       <div class="title">
         <h1>🌿 Green Leaf</h1>
@@ -1090,7 +1093,7 @@
     </div>
     <hr />
 
-    <!-- unified action bar -->
+    <!-- ===== ACTION BAR ===== -->
     <div class="action-panel">
       <!-- profile icon button (with modern icon) -->
       <form class="profile-form" onsubmit="return false;">
@@ -1120,6 +1123,7 @@
       </div>
     </div>
 
+    <!-- ===== MAIN TRIP PLANNER ===== -->
     <section class="planner-grid" aria-label="Trip planner and vehicle profile">
       <article class="planner-card profile-menu" id="profileMenu" hidden>
         <h2>Vehicle Profile</h2>
@@ -1264,10 +1268,12 @@
       </article>
     </section>
 
+    <!-- ===== MAP VIEW ===== -->
     <div class="map-container">
       <div id="map" class="map-stage"></div>
     </div>
 
+    <!-- ===== TRIP RESULTS ===== -->
     <section
       id="results"
       class="trip-details-card"
@@ -1281,6 +1287,7 @@
       </div>
     </section>
 
+    <!-- ===== ROUTE OPTIONS ===== -->
     <section
       id="routesList"
       class="routes-list-section"
@@ -1288,6 +1295,7 @@
       aria-label="Route options"
     ></section>
 
+    <!-- ===== PROFILE SUMMARY ===== -->
     <section
       id="profileSummarySection"
       class="trip-details-card profile-summary-card"
@@ -1326,6 +1334,7 @@
       <div id="profileRecentTrips" class="profile-summary-list"></div>
     </section>
 
+    <!-- ===== HISTORY PANEL ===== -->
     <section
       id="historyPanel"
       class="trip-details-card history-panel"
@@ -1348,11 +1357,14 @@
       <div id="historyTripList" class="history-list"></div>
     </section>
 
+    <!-- ===== DATALISTS ===== -->
     <datalist id="makeOptions"></datalist>
     <datalist id="modelOptions"></datalist>
     <datalist id="fuelOptions"></datalist>
 
+    <!-- ===== SCRIPT: APP LOGIC ===== -->
     <script>
+      // ===== CONSTANTS & GLOBAL STATE =====
       const DEFAULT_LOCATION = { lat: 38.627, lng: -90.1994 };
       const IP_LOOKUP_URL =
         "https://ipapi.co/json/?fields=latitude,longitude,city,region,country_name";
@@ -1378,6 +1390,7 @@
 
       const TRIP_HISTORY_STORAGE_KEY = "greenLeafTripHistory";
 
+      // ===== SMALL UTILITIES =====
       const fuelTypeMap = {
         X: "Regular Gasoline",
         Z: "Premium Gasoline",
@@ -1400,6 +1413,7 @@
           .replaceAll("'", "&#39;");
       }
 
+          // ===== DOM REFERENCES =====
       const profileToggleBtn = document.getElementById("profileBtn");
       const profileMenu = document.getElementById("profileMenu");
       const menuDiscover = document.getElementById("menuDiscover");
@@ -1455,6 +1469,7 @@
       // Autocomplete instances map
       const autocompleteInstances = new Map();
 
+      // ===== GOOGLE PLACES AUTOCOMPLETE =====
       // Initialize autocomplete for search inputs
       function initializeAutocomplete(inputElement) {
         if (!inputElement) return;
@@ -1859,6 +1874,7 @@
         }
       }
 
+      // ===== TRIP HISTORY & STORAGE =====
       function buildTripEntries(trips, emptyLabel) {
         if (!Array.isArray(trips) || trips.length === 0) {
           return `
@@ -2002,6 +2018,7 @@
         );
       }
 
+      // ===== VEHICLE PROFILE MANAGEMENT =====
       function openProfileSection() {
         if (!profileSummarySection) return;
 
@@ -2239,6 +2256,7 @@
         }
       }
 
+      // ===== LOCATION RESOLUTION =====
       async function resolveLocationFromGeolocation() {
         return new Promise((resolve, reject) => {
           if (!navigator.geolocation) {
@@ -2329,6 +2347,7 @@
         }
       }
 
+      // ===== DESTINATION MANAGEMENT =====
       function centerMap(location) {
         if (!map) return;
         const center = { lat: location.lat, lng: location.lng };
@@ -2512,6 +2531,7 @@
         return searchInput ? [searchInput, ...extraInputs] : extraInputs;
       }
 
+      // ===== ROUTE VISUALIZATION =====
       function clearDestinationMarkers() {
         if (destinationMarker) {
           destinationMarker.setMap(null);
@@ -2719,6 +2739,7 @@
         });
       }
 
+      // ===== ROUTE CALCULATION =====
       async function findGreenestRoute(event) {
         event.preventDefault();
         clearUiStatus();
@@ -2857,6 +2878,7 @@
         }
       }
 
+      // ===== GOOGLE MAPS API LOADING =====
       async function fetchGoogleMapsApiKey() {
         if (googleMapsApiKey) {
           return googleMapsApiKey;
@@ -2941,6 +2963,7 @@
         }
       }
 
+      // ===== EVENT LISTENERS & STARTUP =====
       function attachCarDropdownHandlers() {
         document.getElementById("Make").addEventListener("change", () => {
           populateModels();
