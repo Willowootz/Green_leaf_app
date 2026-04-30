@@ -52,6 +52,7 @@ Green_leaf_app/
 - [app/frontend/templates/index.html](app/frontend/templates/index.html) - Main web UI
 - [app/frontend/static/css/style.css](app/frontend/static/css/style.css) - App styling
 - [data/raw/vehicles.json](data/raw/vehicles.json) - Vehicle emissions dataset
+- Dataset source: [CO2 Emission by Vehicles (Kaggle)](https://www.kaggle.com/datasets/debajyotipodder/co2-emission-by-vehicles)
 - [secrets.toml](secrets.toml) - Google Maps API key configuration
 - [app/backend/services/carbonemissionspredictions.py](app/backend/services/carbonemissionspredictions.py) - Emissions modeling script
 - [notebooks/CarbonEmissionsPredictions.ipynb](notebooks/CarbonEmissionsPredictions.ipynb) - Notebook version of the emissions work
